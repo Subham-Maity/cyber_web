@@ -9,15 +9,6 @@ const jobSchema: Schema<IJob> = new Schema({
     name: { type: String, required: true },
 });
 
-// Define the job model
-const JobModel: Model<IJob> = mongoose.model('Job', jobSchema);
-
-// Sample Job Positions
-const jobPositions: string[] = [
-    "Cybersecurity Analyst",
-    "Information Security Officer",
-    // Add the rest of the job positions here
-];
 
 const JobPosition = mongoose.model<IJob>('JobPosition', jobSchema);
 

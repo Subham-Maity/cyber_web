@@ -1,11 +1,22 @@
 import express from 'express';
-import { addJobPost, getJobPosts, getJobAutoComplete } from '../controller/jobPostController';
+import { addJobPost, getJobPosts, } from '../controller/jobPostController';
+import multer from 'multer'
 
 const jobPostRouter = express.Router();
 
-jobPostRouter.route("/add").post(addJobPost);
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); // The directory where files will be stored
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname); // Use the original filename
+    },
+});
+const upload = multer({ storage: storage });
+
+jobPostRouter.route("/add").post(upload.single('fileAttachment'), addJobPost);
 jobPostRouter.route("/get").get(getJobPosts);
-jobPostRouter.route("/search").get(getJobAutoComplete);
+// jobPostRouter.route("/search").get(getJobAutoComplete);
 
 
 

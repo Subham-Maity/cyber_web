@@ -10,20 +10,49 @@ const companySchema: Schema = new Schema({
         required: true,
         unique: true,
     },
-    location: {
+    logo: {
         type: String,
         required: true,
+        default: "none"
     },
+    contactNumber: {
+        type: String,
+    },
+    website: {
+        type: String,
+        required: true
+    },
+    foundedDate: {
+        type: Date,
+    },
+    location: [
+        {
+            locality: String,
+            city: String,
+            state: String,
+            country: String,
+            zipcode: String,
+            maplocation: String,
+
+        }
+    ],
     teamSize: {
         type: String,
         required: true,
+    },
+    category: {
+        type: String
     },
     about: {
         type: String,
     },
     jobPosts: {
-        type: [String], // Assuming job posts are stored as an array of strings
-        default: [], // You can set a default value if needed
+        type: [String],
+        default: [],
+    },
+    socialSites: {
+        type: [String],
+        default: [],
     },
 });
 

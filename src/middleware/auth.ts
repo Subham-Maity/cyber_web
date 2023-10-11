@@ -15,8 +15,9 @@ interface CustomJwtPayload extends JwtPayload {
 
 export const isAuthenticatedCandidate = catchAsyncError(async (req, res, next) => {
     // const { token } = req.cookies;
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1MWMwMmViYTRhYWY4NGYwNTFiOWI3MyIsImFjY2Vzc1Rva2VuIjoiQVFWel9sM3kycDAxSTVUS012Z2tCMk02a0pRcGk0cFR5UnZkTjFkVHN2cHFRZzU5V2FlYjgyeU9aaG9DNDJZX3ZQQVFSczhWWWRvUzJqcTFpRlRJbnlwWWJMcF9LX2IxaTZzWERvZFFZUENQWkVmOWJpdndsLVdYaGNpWkU0VTM1aVh4OHRhT3BYLW1KcGZfZUc4SVRwSkRSQmJ1T1gzdzE3WHFnc0ZNWkZ3TzNqWmZNMklWRGcyd2hmTjBQSmkyS1h6M1NDNWllenN3RTNWWmowSjc3dG40MnBQYnBScG5nTy10SjdfalV5b242bDdFSWYxTU1jdkxCYzBVekp4aHBZaVhRMEJpNE1LYXdEVE9zUjUxMjV4X2l5Mld6UkJtbXc0VmdZdF9EeFV3RUJ1MnhDbTlkeEVVS3VtQzhuaXpLeWh6bVNmbm1UVHNhdWVYT0t3NmhaWTFRZFptaFEiLCJpYXQiOjE2OTYzMzQ1NzIsImV4cCI6MTcwMTUxODU3Mn0.5zb97Uhp8zlrtPXpnK5RQdG-SX7zMo81ySfS9ozlpGg'
-
+    //access token 
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1MWU5MGZkZjViZGE4MGRlMmExZTc4YSIsImFjY2Vzc1Rva2VuIjoiQVFWdGtrdjhNQUdSOXY4Mm5qRFVCcUFBRklXZnR0SFBIX1hUaWNpYjJrTjU0dHJUOXZESWZiNGs5QlR4Z1dCTncxTWZmSzh1RmpIek5GUUVRejB0MjNOQjlQWmFuZzNoaXAwMUNDT1Ffd2g0LXBBUF9Hbk5jOHBoVFVUY0tsV3dHa1h4SV9URzROLUJsWjRaYzNsTUZOZEVZUlotNmdqaW13U250RzlmNWp2ZTZqbmJwaVZEVUVBd0dRNGVXYVU0MmZHYUE3aXE4X3BGYnlYWTNUMnV1S2VnZ3NKRW9sOGpSMXhwdmIxTzFoUlEyb0Z1V21teW16QzlQWE5kbXNGcUszVktDVGFCTWMxeFZXV3ZQWTc5WWxmN3h2a09QbkxwV3l4Zm96QTRma0p6Vk5OV2NqdXBIbkdjQ1NvS3hRMWNaTm9lb1hqTG4zRzdkODFkSHYwekxldEdoUXp3YXciLCJpYXQiOjE2OTY1MDIwMTMsImV4cCI6MTcwMTY4NjAxM30.aCei-qj-WzJW7hxgj3zJU41uZWYBiz4YV2_sJIb_QeU'
+    // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1MWQ2NTM2NjczODUxYjgwZjMyZTA2ZSIsImlhdCI6MTY5NjQyNTI3MSwiZXhwIjoxNzAxNjA5MjcxfQ.c4H4yUyIkmkKF4yjNzq7PRLYJMnXUfuScUKnNjM3neg'
     if (!token) {
         return next(new ErrorHandler("Please Login to access this resource", 401));
     }
@@ -26,9 +27,12 @@ export const isAuthenticatedCandidate = catchAsyncError(async (req, res, next) =
     const decodedData = jwt.verify(token, process.env.JWT_SECRET) as CustomJwtPayload;
     console.log("decodedData", decodedData);
 
-    let isAccessTokenActive = await isActive(decodedData.accessToken, next);
-    if (!isAccessTokenActive) {
-        return next(new ErrorHandler("token has been expired", 401));
+    // if logged in with linkedIn
+    if (decodedData.hasOwnProperty('accessToken')) {
+        let isAccessTokenActive = await isActive(decodedData.accessToken, next);
+        if (!isAccessTokenActive) {
+            return next(new ErrorHandler("token has been expired", 401));
+        }
     }
 
     const candidate = await Candidate.findOne({ _id: decodedData.id })

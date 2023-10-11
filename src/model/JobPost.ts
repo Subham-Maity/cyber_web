@@ -9,7 +9,7 @@ const jobPostSchema: Schema = new Schema({
     },
     description: {
         type: String,
-        required: true,
+
     },
     location: {
         type: String,
@@ -17,23 +17,32 @@ const jobPostSchema: Schema = new Schema({
     },
     jobType: {
         type: String,
-        enum: ['full-time', 'part-time', 'internship'],
+        // enum: ['full-time', 'part-time', 'internship', 'hourly-contract', 'fixed-price'],
         required: true,
+    },
+    jobCategory: {
+        type: String
     },
     skillsRequired: {
         type: [String],
-        required: true,
+        default: []
+    },
+    salary: {
+        minimum: String,
+        maximum: String,
+        isDisclosed: Boolean
     },
     preferredExperience: {
         type: String,
-        required: true,
     },
-    companyId: {
-        type: mongoose.Types.ObjectId,
-        ref: 'Company',
-        required: true,
-    },
-    // You can add more fields here as needed for job posts
+    // companyId: {
+    //     type: mongoose.Types.ObjectId,
+    //     ref: 'Company',
+    // },
+    fileAttachment: {
+        data: Buffer,
+        contentType: String,
+    }
 });
 
 // Create and export the Job Post model
