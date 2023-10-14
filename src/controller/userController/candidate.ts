@@ -141,3 +141,52 @@ export const getAllCandidate = catchAsyncError(async (req, res, next) => {
         candidates
     })
 })
+
+export const updateCandidate = catchAsyncError(async (req, res, next) => {
+
+    if (!req.body) {
+        return next(new ErrorHandler("body not found", 400));
+    }
+    const { id } = req.params;
+    const candidate = await Candidate.findByIdAndUpdate({ _id: id }, req.body);
+    if (!candidate) {
+        return next(new ErrorHandler("something went wrong ,try again", 500));
+    }
+    res.status(200).json({
+        success: true,
+        candidate
+    })
+})
+export const updateEducation = catchAsyncError(async (req, res, next) => {
+
+    if (!req.body) {
+        return next(new ErrorHandler("body not found", 400));
+    }
+    const { id } = req.params;
+    let candidate = await Candidate.findOne({ _id: id });
+    candidate?.education.push(req.body)
+    await candidate?.save();
+    if (!candidate) {
+        return next(new ErrorHandler("something went wrong ,try again", 500));
+    }
+    res.status(200).json({
+        success: true,
+
+    })
+})
+export const updateExperience = catchAsyncError(async (req, res, next) => {
+
+    if (!req.body) {
+        return next(new ErrorHandler("body not found", 400));
+    }
+    const { id } = req.params;
+    const candidate = await Candidate.findOne({ _id: id });
+    candidate?.experience.push(req.body);
+    await candidate?.save();
+    if (!candidate) {
+        return next(new ErrorHandler("something went wrong ,try again", 500));
+    }
+    res.status(200).json({
+        success: true,
+    })
+})
