@@ -12,6 +12,8 @@ import employerRouter from './routes/user/employer.js';
 import morgan from "morgan";
 import controlledFieldRouter from './routes/controlledField.js';
 import errorMiddleware from './middleware/error.js';
+import fs from "fs";
+import https from "https"
 dotenv.config()
 // initiating the app
 const app: Express = express();
@@ -42,6 +44,11 @@ app.use("/api/v1/", controlledFieldRouter)
 
 app.use(errorMiddleware);
 
+const options = {
+  cert: fs.readFileSync('/etc/letsencrypt/live/layer2.fun/fullchain.pem'),
+  key: fs.readFileSync('/etc/letsencrypt/live/layer2.fun/privkey.pem')
+};
+
 const port = process.env.PORT || 8000;
 const start = async () => {
   try {
@@ -53,6 +60,7 @@ const start = async () => {
         )
       );
     }
+    https.createServer(options, app).listen(443);
 
   } catch (error) {
     console.log(error);
