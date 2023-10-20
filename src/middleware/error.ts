@@ -7,6 +7,7 @@ export default (err: any, req: Request, res: Response, next: NextFunction) => {
         err.statusCode = 400;
         err.message = Object.values(err.errors).map((items: any) => items.message).join(',')
     }
+    console.log(err)
 
     res.status(err.statusCode).json({
         success: false,

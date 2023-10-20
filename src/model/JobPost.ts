@@ -9,41 +9,55 @@ const jobPostSchema: Schema = new Schema({
     },
     description: {
         type: String,
-
     },
     location: {
-        type: String,
+        type: [String],
         required: true,
     },
+    benefits: {
+        type: [String],
+    },
     jobType: {
-        type: String,
+        type: [String],
         // enum: ['full-time', 'part-time', 'internship', 'hourly-contract', 'fixed-price'],
         required: true,
     },
     jobCategory: {
         type: String
     },
-    skillsRequired: {
+    workMode: {
+        type: String
+    },
+    preferredLanguage: {
+        type: String
+    },
+    primarySkills: {
+        type: [String],
+        default: []
+    },
+    secondarySkills: {
         type: [String],
         default: []
     },
     salary: {
-        minimum: String,
-        maximum: String,
+        minimum: Number,
+        maximum: Number,
         isDisclosed: Boolean
     },
     preferredExperience: {
-        type: String,
+        type: [String],
     },
-    // companyId: {
-    //     type: mongoose.Types.ObjectId,
-    //     ref: 'Company',
-    // },
-    fileAttachment: {
-        data: Buffer,
-        contentType: String,
+    companyId: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Company',
+    },
+    testQuestions: {
+        type: String
     }
-});
+
+},
+    { timestamps: true }
+);
 
 // Create and export the Job Post model
 const JobPost = mongoose.model<IJobPost>('JobPost', jobPostSchema);

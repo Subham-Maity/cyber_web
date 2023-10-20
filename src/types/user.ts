@@ -74,6 +74,12 @@ interface ILocation {
     zipcode: string;
     maplocation: string;
 }
+interface IFunding {
+    amount: string,
+    fundedBy: string,
+    yearOfFunding: string,
+    round: string,
+}
 
 export interface ICompany extends Document {
     name: string;
@@ -81,35 +87,36 @@ export interface ICompany extends Document {
     logo: string;
     contactNumber?: string;
     website: string;
+    founderName: string;
     foundedDate: Date;
+    funding: IFunding[];
     location: ILocation[];
     teamSize: string;
     category: string;
     about: string;
     jobPosts: string[];
     socialSites: string[];
+    benefits: string[];
 }
 
 export interface IJobPost extends Document {
     title: string;
     description: string;
     location: string;
-    jobType: 'full-time' | 'part-time' | 'internship' | 'hourly-contract' | 'fixed-price';
-    jobCategory?: string;
-    skillsRequired: string[];
+    jobType: string[];
+    jobCategory: string;
+    workMode: string;
+    preferredLanguage: string;
+    primarySkills: string[];
+    secondarySkills: string[];
     salary: {
-        minimum: string;
-        maximum: string;
+        minimum: number;
+        maximum: number;
         isDisclosed: boolean;
     };
-    preferredExperience: string;
+    preferredExperience: string[];
     companyId: mongoose.Types.ObjectId;
-    experience?: string;
-    industry?: string;
-    fileAttachment?: {
-        data: Buffer;
-        contentType: string;
-    };
+    testQuestions: string;
 }
 
 export interface IControlledFieldSchema extends Document {

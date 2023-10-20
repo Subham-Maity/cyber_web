@@ -7,6 +7,7 @@ export const addCompany = catchAsyncError(async (req, res, next) => {
     if (!req.body) {
         return next(new ErrorHandler("body not found", 400));
     }
+    console.log(req.body);
 
     const company = await Company.create(req.body);
 

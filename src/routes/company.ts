@@ -1,6 +1,6 @@
 import express from 'express';
 import { addCompany, getCompanies, } from '../controller/company';
-import { chatWithAi, chatWithAiUsingRest } from '../controller/aiController';
+import { chatWithAiUsingRest } from '../controller/aiController';
 
 const companyRouter = express.Router();
 

@@ -8,7 +8,6 @@ const companySchema: Schema = new Schema({
     email: {
         type: String,
         required: true,
-        unique: true,
     },
     logo: {
         type: String,
@@ -25,6 +24,9 @@ const companySchema: Schema = new Schema({
     foundedDate: {
         type: Date,
     },
+    founderName: {
+        type: String,
+    },
     location: [
         {
             locality: String,
@@ -34,6 +36,14 @@ const companySchema: Schema = new Schema({
             zipcode: String,
             maplocation: String,
 
+        }
+    ],
+    funding: [
+        {
+            amount: String,
+            fundedBy: String,
+            yearOfFunding: String,
+            round: String,
         }
     ],
     teamSize: {
@@ -54,7 +64,14 @@ const companySchema: Schema = new Schema({
         type: [String],
         default: [],
     },
-});
+    benefits: {
+        type: [String],
+        default: [],
+    },
+}, {
+    timestamps: true
+}
+);
 
 
 const Company = mongoose.model<ICompany>('Company', companySchema);
