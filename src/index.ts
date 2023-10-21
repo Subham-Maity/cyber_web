@@ -50,6 +50,7 @@ const options = {
 };
 
 const port = process.env.PORT || 8000;
+const httpsPort = 443
 const start = async () => {
   try {
     if (process.env.MONGO_URL) {
@@ -60,7 +61,11 @@ const start = async () => {
         )
       );
     }
-    https.createServer(options, app).listen(443);
+    https.createServer(options, app).listen(httpsPort, () => {
+      console.log(
+        `⚡️[server]: Server is running on HTTPS at port ${httpsPort}`
+      );
+    });
 
   } catch (error) {
     console.log(error);
