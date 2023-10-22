@@ -27,7 +27,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(status());
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -39,15 +39,17 @@ app.use("/api/v1/jobPost", jobPostRouter);
 app.use("/api/v1/candidate", candidateRouter)
 app.use("/api/v1/employer", employerRouter);
 app.use("/api/v1/", controlledFieldRouter)
-
+app.use("/", (req, res, next) => {
+  res.send("⚡️[server]: This is cyberLevel's server")
+})
 
 
 app.use(errorMiddleware);
 
-const options = {
-  cert: fs.readFileSync('/etc/letsencrypt/live/layer2.fun/fullchain.pem'),
-  key: fs.readFileSync('/etc/letsencrypt/live/layer2.fun/privkey.pem')
-};
+// const options = {
+//   cert: fs.readFileSync('/etc/letsencrypt/live/layer2.fun/fullchain.pem'),
+//   key: fs.readFileSync('/etc/letsencrypt/live/layer2.fun/privkey.pem')
+// };
 
 const port = process.env.PORT || 8000;
 const httpsPort = 443
@@ -61,11 +63,11 @@ const start = async () => {
         )
       );
     }
-    https.createServer(options, app).listen(httpsPort, () => {
-      console.log(
-        `⚡️[server]: Server is running on HTTPS at port ${httpsPort}`
-      );
-    });
+    // https.createServer(options, app).listen(httpsPort, () => {
+    //   console.log(
+    //     `⚡️[server]: Server is running on HTTPS at port ${httpsPort}`
+    //   );
+    // });
 
   } catch (error) {
     console.log(error);

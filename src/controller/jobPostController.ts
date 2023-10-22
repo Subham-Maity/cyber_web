@@ -2,6 +2,7 @@ import catchAsyncError from "../middleware/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import JobPost from "../model/JobPost";
 import fs from 'fs'
+import Company from "../model/Company";
 
 export const addJobPost = catchAsyncError(async (req, res, next) => {
 
@@ -21,17 +22,45 @@ export const addJobPost = catchAsyncError(async (req, res, next) => {
 })
 export const getDetails = catchAsyncError(async (req, res, next) => {
 
-    const { id } = req.query;
+    const { id } = req.params;
     if (!id) {
         return next(new ErrorHandler("job post not found", 400));
     }
 
     const job = await JobPost.findOne({ _id: id });
+    const company = await Company.findById({ _id: job?.companyId });
 
     res.status(200).json({
         job,
+        company,
         success: true,
     })
+})
+
+export const deleteJobPost = catchAsyncError(async (req, res, next) => {
+
+    const { id } = req.params;
+    if (!id) {
+        return next(new ErrorHandler("job post not found", 400));
+    }
+
+    await JobPost.findByIdAndDelete({ _id: id });
+    const p = 1;
+    const limit = 8;
+    const skip = (p - 1) * limit;
+
+    let result = await JobPost.find({}).skip(skip).limit(limit);
+    const totalJobPost = await JobPost.countDocuments({});
+    const totalNumOfPage = Math.ceil(totalJobPost / limit);
+    console.log(totalNumOfPage);
+
+    res.status(200).json({
+        success: true,
+        totalNumOfPage,
+        totalJobPost,
+        result,
+    });
+
 })
 
 export const getJobPosts = catchAsyncError(async (req, res, next) => {

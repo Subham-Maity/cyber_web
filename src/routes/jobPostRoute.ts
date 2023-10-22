@@ -1,5 +1,5 @@
 import express from 'express';
-import { addJobPost, getJobPosts, populateJobPost, getDetails } from '../controller/jobPostController';
+import { addJobPost, getJobPosts, populateJobPost, getDetails, deleteJobPost } from '../controller/jobPostController';
 import multer from 'multer'
 import { chatWithAiUsingRest } from '../controller/aiController';
 
@@ -18,8 +18,8 @@ const upload = multer({ storage: storage });
 jobPostRouter.route("/add").post(addJobPost);
 jobPostRouter.route("/get").get(getJobPosts);
 jobPostRouter.route("/populate").post(populateJobPost);
-jobPostRouter.route("/details").get(getDetails);
 jobPostRouter.route("/askGpt").get(chatWithAiUsingRest);
+jobPostRouter.route("/:id").get(getDetails).delete(deleteJobPost);
 
 
 

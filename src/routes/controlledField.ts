@@ -18,4 +18,5 @@ controlledFieldRouter.route("/jobCategory/search").get(getAutoComplete(JobCatego
 controlledFieldRouter.route("/jobTitle/search").get(getAutoComplete(JobPosition));
 
 
+
 export default controlledFieldRouter;
