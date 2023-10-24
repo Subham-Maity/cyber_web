@@ -19,6 +19,12 @@ const candidateSchema = new mongoose.Schema({
         required: true,
         default: "candidate"
     },
+    gender: {
+        type: String,
+    },
+    experienceInShort: {
+        type: String,
+    },
     email: {
         type: String,
         required: true,
@@ -30,11 +36,11 @@ const candidateSchema = new mongoose.Schema({
         required: true,
         default: false,
     },
-    password: {
-        type: String,
-        minlength: [6, "password should have a minimum of 6 characters"],
-        select: false,
-    },
+    // password: {
+    //     type: String,
+    //     minlength: [6, "password should have a minimum of 6 characters"],
+    //     select: false,
+    // },
     avatar: {
         type: String,
         default: "none"
@@ -66,29 +72,27 @@ const candidateSchema = new mongoose.Schema({
             description: String
         }
     ],
-    location: [
-        {
-            locality: String,
-            city: String,
-            state: String,
-            country: String,
-            zipcode: String,
-            maplocation: String,
+    location:
+    {
+        locality: String,
+        city: String,
+        country: String,
 
-        }
-    ],
+    }
+    ,
     socialSites: {
         type: [String],
         default: [],
     },
     skills: {
         type: [String],
+        default: [],
 
     },
-    signInProvider: {
-        type: String,
-        enum: ["linkedIn", "jwt"]
-    },
+    // signInProvider: {
+    //     type: String,
+    //     enum: ["linkedIn", "jwt"]
+    // },
     bio: {
         type: String,
     }

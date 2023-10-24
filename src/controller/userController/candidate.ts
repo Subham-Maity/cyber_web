@@ -6,6 +6,7 @@ import Candidate from "../../model/user/Candidate";
 import { sendToken } from "../../utils/sendToken";
 import Employer from "../../model/user/Employer";
 import { IEmployer, ICandidate } from "../../types/user";
+import fs from 'fs';
 dotenv.config();
 
 const serverGeneratedState = "12345678"
@@ -73,9 +74,20 @@ export const getUserLinkedIn = catchAsyncError(async (req, res, next) => {
     sendToken(user, 201, res, accessToken);
 
 })
+export const getCurrCandidate = catchAsyncError(async (req, res, next) => {
+    const { id } = req.params
+    // middleware should be there for authentication
+    if (!id) {
+        return next(new ErrorHandler("Candidate Id Not Found", 400))
+    }
+    console.log(id)
+    const candidate = await Candidate.findById({ _id: id });
 
-
-
+    res.status(200).json({
+        success: true,
+        candidate,
+    });
+})
 export const signupCandidate = catchAsyncError(async (req, res, next) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -134,12 +146,60 @@ export const logoutCandidate = catchAsyncError(async (req, res, next) => {
 
 export const getAllCandidate = catchAsyncError(async (req, res, next) => {
 
-    const candidates = await Candidate.find();
+    const { keyword, location, candidateType, preferredExperience, page } = req.query;
+    // console.log(req.query)
+    const myKeyWord = keyword as string
+
+    const queryObject: any = {}
+    if (location) {
+        let desiredLocation: string | string[] = location as string;
+        desiredLocation = desiredLocation.split(",");
+        queryObject.location = { $in: desiredLocation }
+    }
+    if (keyword) {
+        // queryObject.skills = { $in: [new RegExp(myKeyWord, 'i')] };
+        queryObject.firstName = { $regex: myKeyWord, $options: "i" };
+    }
+    if (candidateType) {
+        queryObject.gender = candidateType
+    }
+
+    if (preferredExperience) {
+        let desiredExperience: string | string[] = preferredExperience as string
+        desiredExperience = desiredExperience.split(",");
+        queryObject.experienceInShort = { $all: desiredExperience };
+    }
+    //user provides a number, such as salary=4, to find job posts with salary ranges that include this number:
+
+    console.log(page)
+    const p = Number(page) || 1;
+    const limit = 8;
+    const skip = (p - 1) * limit;
+
+    let result = await Candidate.find(queryObject).skip(skip).limit(limit);
+    const totalCandidate = await Candidate.countDocuments(queryObject);
+    const totalNumOfPage = Math.ceil(totalCandidate / limit);
+    console.log(totalNumOfPage);
 
     res.status(200).json({
         success: true,
-        candidates
-    })
+        totalNumOfPage,
+        totalCandidate,
+        result,
+    });
+
+})
+export const getDetails = catchAsyncError(async (req, res, next) => {
+
+    const { id } = req.params;
+
+    const candidate = await Candidate.findById({ _id: id });
+
+    res.status(200).json({
+        success: true,
+        candidate
+    });
+
 })
 
 export const updateCandidate = catchAsyncError(async (req, res, next) => {
@@ -189,4 +249,24 @@ export const updateExperience = catchAsyncError(async (req, res, next) => {
     res.status(200).json({
         success: true,
     })
+})
+
+export const populateCandidate = catchAsyncError(async (req, res, next) => {
+    const location = 'mockData/Candidate.json'
+    let candidates: any = "";
+
+    fs.readFile(location, 'utf8', async function (err, data) {
+        if (err) {
+            console.error('There was an error reading the file!', err);
+            return;
+        }
+
+        candidates = JSON.parse(data);
+        await Candidate.insertMany(candidates)
+        // console.log(jobPosts[1]);
+
+    });
+
+    res.send({ msg: "true" })
+
 })

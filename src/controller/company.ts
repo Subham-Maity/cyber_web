@@ -76,11 +76,13 @@ export const getCompanies = catchAsyncError(async (req, res, next) => {
     const { page, name, teamSize } = req.query;
     const queryObject: any = {}
     if (name) {
-        queryObject.name = name
+        queryObject.name = { $regex: name, $options: "i" };
+        console.log(name);
     }
     if (teamSize) {
-
-        queryObject.teamSize = teamSize;
+        let desiredTeamSize: string | string[] = teamSize as string;
+        desiredTeamSize = desiredTeamSize.split(",");
+        queryObject.teamSize = { $in: desiredTeamSize }
     }
 
     const p = Number(page) || 1;

@@ -40,6 +40,8 @@ export interface ICandidate extends Document {
     experience: IExperience[],
     education: IEducation[],
     socialSites: string[];
+    experienceInShort: string,
+    gender: string,
     bio: string,
     createJWT(accessToken?: string): string;
     comparePassword(givenPassword: string): Promise<boolean>;
