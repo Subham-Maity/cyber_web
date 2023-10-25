@@ -42,7 +42,20 @@ export const loginEmployer = catchAsyncError(async (req, res, next) => {
     sendToken(candidate, 201, res);
 })
 
+export const getCurrEmployer = catchAsyncError(async (req, res, next) => {
+    const { id } = req.params
+    // middleware should be there for authentication
+    if (!id) {
+        return next(new ErrorHandler("Candidate Id Not Found", 400))
+    }
+    console.log(id)
+    const employer = await Employer.findById({ _id: id });
 
+    res.status(200).json({
+        success: true,
+        employer,
+    });
+})
 
 export const getAllEmployer = catchAsyncError(async (req, res, next) => {
 

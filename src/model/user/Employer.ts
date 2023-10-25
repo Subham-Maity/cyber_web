@@ -29,6 +29,10 @@ const employerSchema = new mongoose.Schema({
         unique: true,
         // validate: [validator.isEmail, "please enter a valid email"],
     },
+    freeCount: {
+        type: Number,
+        default: 5,
+    },
     isEmailVerified: {
         type: Boolean,
         required: true,
@@ -57,6 +61,10 @@ const employerSchema = new mongoose.Schema({
     description: {
         type: String,
 
+    },
+    socialSites: {
+        type: [String],
+        default: [],
     },
     jobs: [
         {

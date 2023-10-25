@@ -12,37 +12,14 @@ export const signupAdmin = catchAsyncError(async (req, res, next) => {
         return res.status(400).json({ error: 'Invalid request body' });
     }
     console.log("called ,sign")
-    const { email } = req.body;
-    const resi = auth.createUser({
-        email: email,
-        emailVerified: false,
-        password: '123shiva',
-        displayName: 'John Doe',
-        disabled: false
-    })
-        .then((userRecord) => {
-            console.log('Successfully created new user:', userRecord.uid);
-        })
-        .catch((error) => {
-            console.log('Error creating new user:', error);
-        });
-    return res.status(201).json({
-        resi,
-        success: true,
-        message: "Admin Created successfully",
+    const { email, name, password } = req.body;
 
-    })
-    // console.log(req.body);
-
-    // if (!name || !email) {
-    //     return next(new ErrorHandler("please provide all values", 400))
-    // }
     const userAlreadyExists = await Admin.findOne({ email });
     if (userAlreadyExists) {
         return next(new ErrorHandler("Email already in exist", 400))
     }
-    console.log("called ,sign")
-    const user: AdminDocument = await Admin.create(req.body)
+
+    const user = await Admin.create({ email, name, password })
 
     res.status(201).json({
         success: true,
@@ -60,7 +37,7 @@ export const loginAdmin = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("Please Enter Email & Password", 400));
     }
 
-    const user: AdminDocument = await Admin.findOne({ email }).select("+password");
+    const user = await Admin.findOne({ email }).select("+password");
     if (!user) {
         return next(new ErrorHandler("Invalid  Email or Password", 401))
     }
@@ -141,29 +118,7 @@ export const updateAdminRole = catchAsyncError(async (req, res, next) => {
     })
 
 })
-export const updateAdminCategory = catchAsyncError(async (req, res, next) => {
 
-    if (!req.body) {
-        return next(new ErrorHandler("body is not defined", 400))
-    }
-    const { id, category } = req.body;
-    console.log(req.body);
-
-    const user = await Admin.findOne({ _id: id })
-    if (user) {
-        user.category = category;
-        await user.save();
-
-    }
-
-    const users = await Admin.find();
-    res.status(200).json({
-        success: true,
-        message: "user category updated successfully",
-        users
-    })
-
-})
 
 export const getAllAdmin = catchAsyncError(async (req, res, next) => {
 

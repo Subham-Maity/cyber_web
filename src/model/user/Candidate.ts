@@ -93,6 +93,10 @@ const candidateSchema = new mongoose.Schema({
     //     type: String,
     //     enum: ["linkedIn", "jwt"]
     // },
+    freeCount: {
+        type: Number,
+        default: 5,
+    },
     bio: {
         type: String,
     }

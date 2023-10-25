@@ -21,11 +21,6 @@ const AdminsSchema = new mongoose.Schema({
     unique: true,
     // validate: [validator.isEmail, "please enter a valid email"],
   },
-  uid: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   avatar: {
     type: String,
     default: "none"
@@ -38,17 +33,8 @@ const AdminsSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['superadmin', 'admin', 'vendor'],
-    default: 'vendor',
-  },
-  mediaType: {
-    type: String,
     required: true,
-    default: "music",
-  },
-  category: {
-    type: String,
-    default: "all"
+    default: "admin"
   }
 },
   { timestamps: true }

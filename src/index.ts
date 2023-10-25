@@ -12,6 +12,7 @@ import employerRouter from './routes/user/employer.js';
 import morgan from "morgan";
 import controlledFieldRouter from './routes/controlledField.js';
 import errorMiddleware from './middleware/error.js';
+import adminRouter from './routes/user/adminRoute.js';
 import fs from "fs";
 import https from "https"
 dotenv.config()
@@ -38,10 +39,11 @@ app.use("/api/v1/company", companyRouter);
 app.use("/api/v1/jobPost", jobPostRouter);
 app.use("/api/v1/candidate", candidateRouter)
 app.use("/api/v1/employer", employerRouter);
+app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/", controlledFieldRouter)
-app.use("/", (req, res, next) => {
-  res.send("⚡️[server]: This is cyberLevel's server")
-})
+// app.use("/", (req, res, next) => {
+//   res.send("⚡️[server]: This is cyberLevel's server")
+// })
 
 
 app.use(errorMiddleware);
