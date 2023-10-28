@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { IJobPost } from '../types/user';
+import Candidate from './user/Candidate';
 
 
 const jobPostSchema: Schema = new Schema({
@@ -44,6 +45,11 @@ const jobPostSchema: Schema = new Schema({
         maximum: Number,
         isDisclosed: Boolean
     },
+    status: {
+        type: String,
+        enum: ["active", "expired"],
+        default: 'active',
+    },
     preferredExperience: {
         type: [String],
     },
@@ -51,6 +57,16 @@ const jobPostSchema: Schema = new Schema({
         type: mongoose.Types.ObjectId,
         ref: 'Company',
     },
+    employerId: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Employer',
+    },
+    candidates: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Candidate',
+        },
+    ],
     testQuestions: {
         type: String
     }

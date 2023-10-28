@@ -1,6 +1,6 @@
 import express from 'express';
 import passport from '../../utils/passportConfig'
-import { getUserLinkedIn, getAllCandidate, logoutCandidate, signupCandidate, loginCandidate, updateCandidate, updateEducation, updateExperience, populateCandidate, getDetails, getCurrCandidate } from '../../controller/userController/candidate'
+import { getUserLinkedIn, getAllCandidate, logoutCandidate, signupCandidate, loginCandidate, updateCurrCandidate, updateEducation, updateExperience, populateCandidate, getDetails, getCurrCandidate } from '../../controller/userController/candidate'
 import { isAuthenticatedCandidate } from '../../middleware/auth';
 
 const candidateRouter = express.Router();
@@ -13,10 +13,10 @@ candidateRouter.get('/auth/:id', getCurrCandidate);
 candidateRouter.get('/logout', logoutCandidate)
 candidateRouter.get("/get", getAllCandidate)
 candidateRouter.post("/populate", populateCandidate)
-candidateRouter.patch("/update/:id", updateCandidate)
+candidateRouter.patch("/update/:id", updateCurrCandidate)
 candidateRouter.patch("/updateEdu/:id", updateEducation)
 candidateRouter.patch("/updateExp/:id", updateExperience)
-candidateRouter.get("/:id", getDetails)
+candidateRouter.get("/:id", getDetails);
 
 
 export default candidateRouter;

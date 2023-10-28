@@ -114,8 +114,11 @@ export interface IJobPost extends Document {
         maximum: number;
         isDisclosed: boolean;
     };
+    status: "active" | "expired",
     preferredExperience: string[];
     companyId: mongoose.Types.ObjectId;
+    employerId: mongoose.Types.ObjectId;
+    candidates: mongoose.Types.ObjectId[];
     testQuestions: string;
 }
 
@@ -125,3 +128,10 @@ export interface IControlledFieldSchema extends Document {
     jobCategory: string[],
     jobIndustry: string[],
 }
+
+export interface IJobApp extends Document {
+    candidate: string,
+    jobPost: string,
+    status: string,
+}
+

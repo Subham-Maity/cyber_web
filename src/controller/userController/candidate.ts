@@ -88,6 +88,21 @@ export const getCurrCandidate = catchAsyncError(async (req, res, next) => {
         candidate,
     });
 })
+export const updateCurrCandidate = catchAsyncError(async (req, res, next) => {
+
+    if (!req.body) {
+        return next(new ErrorHandler("body not found", 400));
+    }
+    const { id } = req.params;
+    const candidate = await Candidate.findByIdAndUpdate({ _id: id }, req.body);
+    if (!candidate) {
+        return next(new ErrorHandler("something went wrong ,try again", 500));
+    }
+    res.status(200).json({
+        success: true,
+        candidate
+    })
+})
 export const signupCandidate = catchAsyncError(async (req, res, next) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -202,21 +217,7 @@ export const getDetails = catchAsyncError(async (req, res, next) => {
 
 })
 
-export const updateCandidate = catchAsyncError(async (req, res, next) => {
 
-    if (!req.body) {
-        return next(new ErrorHandler("body not found", 400));
-    }
-    const { id } = req.params;
-    const candidate = await Candidate.findByIdAndUpdate({ _id: id }, req.body);
-    if (!candidate) {
-        return next(new ErrorHandler("something went wrong ,try again", 500));
-    }
-    res.status(200).json({
-        success: true,
-        candidate
-    })
-})
 export const updateEducation = catchAsyncError(async (req, res, next) => {
 
     if (!req.body) {

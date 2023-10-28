@@ -99,6 +99,9 @@ const candidateSchema = new mongoose.Schema({
     },
     bio: {
         type: String,
+    },
+    testScore: {
+        type: Number,
     }
 },
     { timestamps: true }

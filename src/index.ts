@@ -9,6 +9,7 @@ import session from 'express-session'
 import passport from 'passport'
 import candidateRouter from './routes/user/candidate.js';
 import employerRouter from './routes/user/employer.js';
+import jobAppRouter from './routes/jobApp.js';
 import morgan from "morgan";
 import controlledFieldRouter from './routes/controlledField.js';
 import errorMiddleware from './middleware/error.js';
@@ -40,6 +41,7 @@ app.use("/api/v1/jobPost", jobPostRouter);
 app.use("/api/v1/candidate", candidateRouter)
 app.use("/api/v1/employer", employerRouter);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/jobApp", jobAppRouter);
 app.use("/api/v1/", controlledFieldRouter)
 // app.use("/", (req, res, next) => {
 //   res.send("⚡️[server]: This is cyberLevel's server")

@@ -128,6 +128,18 @@ export const getJobPosts = catchAsyncError(async (req, res, next) => {
 
 })
 
+export const getJobPostsForEmployer = catchAsyncError(async (req, res, next) => {
+
+    const { employerId } = req.params;
+
+    const jobPosts = await JobPost.find({ employerId }).limit(5);
+
+    res.status(200).json({
+        success: true,
+        jobPosts
+    })
+})
+
 export const populateJobPost = catchAsyncError(async (req, res, next) => {
     const location = 'mockData/jobPost.json'
     let jobPosts: any = ""

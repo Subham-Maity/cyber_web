@@ -1,5 +1,5 @@
 import express from 'express';
-import { addJobPost, getJobPosts, populateJobPost, getDetails, deleteJobPost } from '../controller/jobPostController';
+import { addJobPost, getJobPosts, populateJobPost, getDetails, deleteJobPost, getJobPostsForEmployer } from '../controller/jobPostController';
 import multer from 'multer'
 import { chatWithAiUsingRest } from '../controller/aiController';
 
@@ -19,6 +19,7 @@ jobPostRouter.route("/add").post(addJobPost);
 jobPostRouter.route("/get").get(getJobPosts);
 jobPostRouter.route("/populate").post(populateJobPost);
 jobPostRouter.route("/askGpt").get(chatWithAiUsingRest);
+jobPostRouter.route("/employer/:employerId").get(getJobPostsForEmployer);
 jobPostRouter.route("/:id").get(getDetails).delete(deleteJobPost);
 
 
