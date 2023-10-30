@@ -118,7 +118,6 @@ export const signupCandidate = catchAsyncError(async (req, res, next) => {
 
     sendToken(candidate, 201, res);
 })
-
 export const loginCandidate = catchAsyncError(async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -147,7 +146,6 @@ export const loginCandidate = catchAsyncError(async (req, res, next) => {
 
     sendToken(candidate ? candidate : employer, 201, res);
 })
-
 export const logoutCandidate = catchAsyncError(async (req, res, next) => {
 
     res.cookie("token", null, {
@@ -158,7 +156,6 @@ export const logoutCandidate = catchAsyncError(async (req, res, next) => {
         message: "Logged Out Successfully"
     });
 })
-
 export const getAllCandidate = catchAsyncError(async (req, res, next) => {
 
     const { keyword, location, candidateType, preferredExperience, page } = req.query;
@@ -217,7 +214,6 @@ export const getDetails = catchAsyncError(async (req, res, next) => {
 
 })
 
-
 export const updateEducation = catchAsyncError(async (req, res, next) => {
 
     if (!req.body) {
@@ -269,5 +265,207 @@ export const populateCandidate = catchAsyncError(async (req, res, next) => {
     });
 
     res.send({ msg: "true" })
+
+})
+// save jobs
+export const saveJob = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId, jobPostId, page } = req.body;
+    if (!candidateId || !jobPostId) {
+        return next(new ErrorHandler("CandidateId or JobPostId not found", 400));
+    }
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, { $addToSet: { savedJobs: jobPostId } }, { new: true });
+    if (!candidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+    const p = Number(page) || 1;
+    const limit = 4;
+    const skip = (p - 1) * limit;
+    const totalSavedJob = candidate?.savedJobs.length;
+
+    const totalNumOfPage = Math.ceil(totalSavedJob / limit);
+    const updatedCandidate = await Candidate.findById(candidateId).populate({
+        path: 'savedJobs',
+        options: { skip: skip, limit: limit },
+    });
+    if (!updatedCandidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        savedJobs: updatedCandidate?.savedJobs,
+        totalSavedJob,
+        totalNumOfPage
+    })
+})
+
+export const removeSavedJob = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId, jobPostId, page } = req.query;
+
+
+    if (!candidateId || !jobPostId) {
+        return next(new ErrorHandler("CandidateId or JobPostId not found", 400));
+    }
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, { $pull: { savedJobs: jobPostId } }, { new: true })
+    if (!candidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+    const p = Number(page) || 1;
+    const limit = 4;
+    const skip = (p - 1) * limit;
+    const totalSavedJob = candidate?.savedJobs.length;
+    const totalNumOfPage = Math.ceil(totalSavedJob / limit);
+    const updatedCandidate = await Candidate.findById(candidateId).populate({
+        path: 'savedJobs',
+        options: { skip: skip, limit: limit },
+    });
+    if (!updatedCandidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+
+
+    res.status(200).json({
+        success: true,
+        savedJobs: updatedCandidate?.savedJobs,
+        totalNumOfPage,
+        totalSavedJob,
+    })
+})
+
+export const getSaveJob = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId, page } = req.query;
+    if (!candidateId) {
+        return next(new ErrorHandler("candidateId not found", 400));
+
+    }
+    const candidateTemp = await Candidate.findById(candidateId);
+    if (!candidateTemp) {
+        return next(new ErrorHandler("candidateId not found", 401));
+    }
+    const p = Number(page) || 1;
+    const limit = 4;
+    const skip = (p - 1) * limit;
+
+    const candidate = await Candidate.findById(candidateId).populate({
+        path: 'savedJobs',
+        options: { skip: skip, limit: limit },
+    });
+    if (!candidate) {
+        return next(new ErrorHandler("candidate not found", 400));
+    }
+    const totalSavedJob = candidateTemp?.savedJobs.length;
+    console.log("from candidate", totalSavedJob);
+    const totalNumOfPage = Math.ceil(totalSavedJob / limit);
+
+    res.status(200).json({
+        success: true,
+        savedJobs: candidate?.savedJobs,
+        totalNumOfPage,
+        totalSavedJob
+    })
+
+})
+
+// save companies
+export const saveCompany = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId, companyId, page } = req.body;
+    if (!candidateId || !companyId) {
+        return next(new ErrorHandler("CandidateId or companyId not found", 400));
+    }
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, { $addToSet: { savedCompanies: companyId } }, { new: true });
+    if (!candidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+    const p = Number(page) || 1;
+    const limit = 4;
+    const skip = (p - 1) * limit;
+    const totalSavedCompany = candidate?.savedCompanies.length;
+
+    const totalNumOfPage = Math.ceil(totalSavedCompany / limit);
+    const updatedCandidate = await Candidate.findById(candidateId).populate({
+        path: 'savedCompanies',
+        options: { skip: skip, limit: limit },
+    });
+    if (!updatedCandidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        savedCompanies: updatedCandidate?.savedCompanies,
+        totalSavedCompany,
+        totalNumOfPage
+    })
+})
+
+export const removeSavedCompany = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId, companyId, page } = req.query;
+
+    if (!candidateId || !companyId) {
+        return next(new ErrorHandler("CandidateId or candidateId not found", 400));
+    }
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, { $pull: { savedCompanies: companyId } }, { new: true })
+    if (!candidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+    const p = Number(page) || 1;
+    const limit = 4;
+    const skip = (p - 1) * limit;
+    const totalSavedCompany = candidate?.savedCompanies.length;
+
+    const totalNumOfPage = Math.ceil(totalSavedCompany / limit);
+    const updatedCandidate = await Candidate.findById(candidateId).populate({
+        path: 'savedCompanies',
+        options: { skip: skip, limit: limit },
+    });
+    if (!updatedCandidate) {
+        return next(new ErrorHandler("Candidate not found", 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        savedCompanies: updatedCandidate?.savedCompanies,
+        totalNumOfPage,
+        totalSavedCompany,
+    })
+})
+
+export const getSavedCompany = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId, page } = req.query;
+
+    if (!candidateId) {
+        return next(new ErrorHandler("candidateId not found", 400));
+    }
+    const candidateTemp = await Candidate.findById(candidateId);
+    if (!candidateTemp) {
+        return next(new ErrorHandler("candidateId not found", 401));
+    }
+    const p = Number(page) || 1;
+    const limit = 4;
+    const skip = (p - 1) * limit;
+
+    const candidate = await Candidate.findById(candidateId).populate({
+        path: 'savedCompanies',
+        options: { skip: skip, limit: limit },
+    });
+    if (!candidate) {
+        return next(new ErrorHandler("candidate not found", 400));
+    }
+    const totalSavedCompany = candidateTemp?.savedCompanies.length;
+    // console.log("from candidate", totalSavedJob);
+    const totalNumOfPage = Math.ceil(totalSavedCompany / limit);
+
+    res.status(200).json({
+        success: true,
+        savedCompanies: candidate?.savedCompanies,
+        totalNumOfPage,
+        totalSavedCompany
+    })
 
 })

@@ -2,6 +2,7 @@ import mongoose, { Model } from "mongoose";
 import { ICandidate } from "../../types/user";
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcryptjs'
+import JobPost from "../JobPost";
 
 const candidateSchema = new mongoose.Schema({
     firstName: {
@@ -89,10 +90,6 @@ const candidateSchema = new mongoose.Schema({
         default: [],
 
     },
-    // signInProvider: {
-    //     type: String,
-    //     enum: ["linkedIn", "jwt"]
-    // },
     freeCount: {
         type: Number,
         default: 5,
@@ -102,7 +99,9 @@ const candidateSchema = new mongoose.Schema({
     },
     testScore: {
         type: Number,
-    }
+    },
+    savedJobs: [{ type: mongoose.Types.ObjectId, ref: 'JobPost' }],
+    savedCompanies: [{ type: mongoose.Types.ObjectId, ref: 'Company' }],
 },
     { timestamps: true }
 );

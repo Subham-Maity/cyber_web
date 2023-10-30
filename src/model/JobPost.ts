@@ -69,7 +69,8 @@ const jobPostSchema: Schema = new Schema({
     ],
     testQuestions: {
         type: String
-    }
+    },
+
 
 },
     { timestamps: true }

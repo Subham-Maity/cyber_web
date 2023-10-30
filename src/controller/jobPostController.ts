@@ -3,6 +3,7 @@ import ErrorHandler from "../utils/errorHandler";
 import JobPost from "../model/JobPost";
 import fs from 'fs'
 import Company from "../model/Company";
+import Candidate from "../model/user/Candidate";
 
 export const addJobPost = catchAsyncError(async (req, res, next) => {
 
@@ -65,8 +66,12 @@ export const deleteJobPost = catchAsyncError(async (req, res, next) => {
 
 export const getJobPosts = catchAsyncError(async (req, res, next) => {
 
-    const { page, location, jobType, jobCategory, workMode, salary, preferredExperience } = req.query;
-    // console.log(req.query)
+    const { page, location, jobType, jobCategory, workMode, salary, preferredExperience, candidateId } = req.query;
+
+    if (!candidateId) {
+        return next(new ErrorHandler("CandidateId Not found", 404))
+    }
+
 
     const queryObject: any = {}
     if (location) {
@@ -114,10 +119,26 @@ export const getJobPosts = catchAsyncError(async (req, res, next) => {
     const limit = 8;
     const skip = (p - 1) * limit;
 
-    let result = await JobPost.find(queryObject).skip(skip).limit(limit);
+    let jobPosts = await JobPost.find(queryObject).skip(skip).limit(limit);
     const totalJobPost = await JobPost.countDocuments(queryObject);
     const totalNumOfPage = Math.ceil(totalJobPost / limit);
-    console.log(totalNumOfPage);
+    // console.log(totalNumOfPage);
+
+    // is jobSaved by the candidate who is requesting
+    const candidate = await Candidate.findById({ _id: candidateId });
+    if (!candidate) {
+        return next(new ErrorHandler("User not Found", 401));
+    }
+    const savedJobs = candidate.savedJobs as string[];
+    let result = jobPosts.map((job) => {
+        const isSaved = savedJobs.includes(job._id);
+        const jobObject = job.toObject();
+        return {
+            ...jobObject,
+            isSaved,
+        };
+    })
+
 
     res.status(200).json({
         success: true,

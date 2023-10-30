@@ -41,6 +41,9 @@ export interface ICandidate extends Document {
     experienceInShort: string,
     gender: string,
     bio: string,
+    isSaved?: boolean,
+    savedJobs: string[] | IJobPost[];
+    savedCompanies: string[] | ICompany[]
     createJWT(accessToken?: string): string;
     comparePassword(givenPassword: string): Promise<boolean>;
 }
@@ -59,6 +62,7 @@ export interface IEmployer extends Document {
     role: string,
     industry: string,
     description: string,
+    savedCandidates: string[] | ICandidate[],
     jobs: string,
     signInProvider: "linkedIn" | "jwt"
     createJWT(accessToken?: string): string;
@@ -97,6 +101,7 @@ export interface ICompany extends Document {
     jobPosts: string[];
     socialSites: string[];
     benefits: string[];
+    isSaved?: boolean;
 }
 
 export interface IJobPost extends Document {
@@ -120,6 +125,7 @@ export interface IJobPost extends Document {
     employerId: mongoose.Types.ObjectId;
     candidates: mongoose.Types.ObjectId[];
     testQuestions: string;
+    isSaved?: boolean
 }
 
 export interface IControlledFieldSchema extends Document {

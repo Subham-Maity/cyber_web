@@ -2,6 +2,7 @@ import catchAsyncError from "../middleware/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import Company from "../model/Company";
 import fs from 'fs'
+import Candidate from "../model/user/Candidate";
 
 export const addCompany = catchAsyncError(async (req, res, next) => {
 
@@ -73,7 +74,7 @@ export const getDetails = catchAsyncError(async (req, res, next) => {
 
 export const getCompanies = catchAsyncError(async (req, res, next) => {
 
-    const { page, name, teamSize } = req.query;
+    const { page, name, teamSize, candidateId } = req.query;
     const queryObject: any = {}
     if (name) {
         queryObject.name = { $regex: name, $options: "i" };
@@ -89,10 +90,27 @@ export const getCompanies = catchAsyncError(async (req, res, next) => {
     const limit = 8;
     const skip = (p - 1) * limit;
 
-    let result = await Company.find(queryObject).skip(skip).limit(limit);
+    let companies = await Company.find(queryObject).skip(skip).limit(limit);
     const totalCompanies = await Company.countDocuments(queryObject);
     const totalNumOfPage = Math.ceil(totalCompanies / limit);
-    console.log(totalNumOfPage)
+    // console.log(totalNumOfPage)
+
+    // is companySaved by the candidate who is requesting
+
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate) {
+        return next(new ErrorHandler("User not Found", 401));
+    }
+
+    const savedCompanies = candidate.savedCompanies as string[];
+    let result = companies.map((job) => {
+        const isSaved = savedCompanies.includes(job._id);
+        const companyObject = job.toObject();
+        return {
+            ...companyObject,
+            isSaved,
+        };
+    })
 
     res.status(200).json({
         success: true,

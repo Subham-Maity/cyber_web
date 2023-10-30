@@ -75,7 +75,8 @@ const employerSchema = new mongoose.Schema({
     signInProvider: {
         type: String,
         enum: ["linkedIn", "jwt"]
-    }
+    },
+    savedCandidates: [{ type: mongoose.Types.ObjectId, ref: 'Candidate' }]
 
 },
     { timestamps: true }
