@@ -158,8 +158,12 @@ export const logoutCandidate = catchAsyncError(async (req, res, next) => {
 })
 export const getAllCandidate = catchAsyncError(async (req, res, next) => {
 
-    const { keyword, location, candidateType, preferredExperience, page } = req.query;
-    // console.log(req.query)
+    const { keyword, location, candidateType, preferredExperience, page, employerId } = req.query;
+
+
+    if (!employerId) {
+        return next(new ErrorHandler("Employer Id not Found", 404))
+    }
     const myKeyWord = keyword as string
 
     const queryObject: any = {}
@@ -188,10 +192,24 @@ export const getAllCandidate = catchAsyncError(async (req, res, next) => {
     const limit = 8;
     const skip = (p - 1) * limit;
 
-    let result = await Candidate.find(queryObject).skip(skip).limit(limit);
+    let candidates = await Candidate.find(queryObject).skip(skip).limit(limit);
     const totalCandidate = await Candidate.countDocuments(queryObject);
     const totalNumOfPage = Math.ceil(totalCandidate / limit);
-    console.log(totalNumOfPage);
+
+    // is Candidate Saved by the Employer who is requesting
+    const employer = await Employer.findById(employerId);
+    if (!employer) {
+        return next(new ErrorHandler("User not Found", 401))
+    }
+    const savedCandidates = employer.savedCandidates as string[];
+    let result = candidates.map((candidate) => {
+        const isSaved = savedCandidates.includes(candidate._id);
+        const candidateObject = candidate.toObject();
+        return {
+            ...candidateObject,
+            isSaved
+        }
+    })
 
     res.status(200).json({
         success: true,

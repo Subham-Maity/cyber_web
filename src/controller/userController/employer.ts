@@ -70,6 +70,7 @@ export const getAllEmployer = catchAsyncError(async (req, res, next) => {
 export const saveCandidate = catchAsyncError(async (req, res, next) => {
 
     const { employerId, candidateId, page } = req.body;
+    // console.log(req.body);
     if (!employerId || !candidateId) {
         return next(new ErrorHandler("employerId or candidateId not found", 400));
     }
@@ -101,6 +102,7 @@ export const saveCandidate = catchAsyncError(async (req, res, next) => {
 export const removeSavedCandidate = catchAsyncError(async (req, res, next) => {
 
     const { employerId, candidateId, page } = req.query;
+
     if (!employerId || !candidateId) {
         return next(new ErrorHandler("employerId or candidateId not found", 400));
     }
