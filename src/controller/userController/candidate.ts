@@ -7,6 +7,7 @@ import { sendToken } from "../../utils/sendToken";
 import Employer from "../../model/user/Employer";
 import { IEmployer, ICandidate } from "../../types/user";
 import fs from 'fs';
+import mongoose from "mongoose";
 dotenv.config();
 
 const serverGeneratedState = "12345678"
@@ -232,6 +233,26 @@ export const getDetails = catchAsyncError(async (req, res, next) => {
 
 })
 
+export const updateNotification = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId } = req.body;
+    const { id } = req.params
+
+    const notificationId = new mongoose.Types.ObjectId(id);
+    const candidate = await Candidate.findOneAndUpdate(
+        { _id: candidateId, 'notifications._id': notificationId },
+        {
+            $set: {
+                'notifications.$.isRead': true,
+            },
+        },
+        { new: true }
+    );
+    res.status(200).json({
+        success: true,
+        candidate
+    })
+})
 export const updateEducation = catchAsyncError(async (req, res, next) => {
 
     if (!req.body) {

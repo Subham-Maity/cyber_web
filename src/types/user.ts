@@ -23,6 +23,14 @@ interface IExperience {
     endYear: string;
     description: string;
 }
+interface INotification {
+    sender: string,
+    message: String,
+    redirectUrl: String,
+    timestamp: Date,
+    isRead: boolean,
+    _id: mongoose.Types.ObjectId
+}
 export interface ICandidate extends Document {
     email: string;
     isEmailVerified: boolean;
@@ -43,7 +51,8 @@ export interface ICandidate extends Document {
     bio: string,
     isSaved?: boolean,
     savedJobs: string[] | IJobPost[];
-    savedCompanies: string[] | ICompany[]
+    savedCompanies: string[] | ICompany[];
+    notifications: INotification[];
     createJWT(accessToken?: string): string;
     comparePassword(givenPassword: string): Promise<boolean>;
 }
@@ -140,4 +149,19 @@ export interface IJobApp extends Document {
     jobPost: string,
     status: string,
 }
+// chat
+interface IChatParticipant {
+    type: mongoose.Types.ObjectId;
+}
 
+interface IChatMessage {
+    role: 'candidate' | 'employer';
+    userId: string;
+    text: string;
+    timestamp: Date;
+}
+export interface IChat extends Document {
+    jobApp: mongoose.Types.ObjectId;
+    participants: [IChatParticipant, IChatParticipant];
+    messages: IChatMessage[];
+}

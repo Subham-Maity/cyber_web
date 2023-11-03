@@ -100,6 +100,15 @@ const candidateSchema = new mongoose.Schema({
     testScore: {
         type: Number,
     },
+    notifications: [
+        {
+            sender: { type: mongoose.Types.ObjectId, ref: 'Employer' },
+            message: String,
+            redirectUrl: String,
+            timestamp: { type: Date, default: Date.now },
+            isRead: { type: Boolean, default: false },
+        },
+    ],
     savedJobs: [{ type: mongoose.Types.ObjectId, ref: 'JobPost' }],
     savedCompanies: [{ type: mongoose.Types.ObjectId, ref: 'Company' }],
 },

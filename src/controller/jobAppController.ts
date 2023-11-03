@@ -2,6 +2,7 @@ import catchAsyncError from "../middleware/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import JobApp from "../model/JobApp";
 import JobPost from "../model/JobPost";
+import Candidate from "../model/user/Candidate";
 
 export const createJobApp = catchAsyncError(async (req, res, next) => {
 
@@ -91,7 +92,8 @@ export const getAllAppByJobPost = catchAsyncError(async (req, res, next) => {
 
 export const updateStatus = catchAsyncError(async (req, res, next) => {
 
-    const { status, id } = req.body;
+    const { status, id, candidateId, employerId, redirectUrl } = req.body;
+    console.log(req.body);
 
     if (!status) {
         return next(new ErrorHandler("status not found", 404));
@@ -104,8 +106,25 @@ export const updateStatus = catchAsyncError(async (req, res, next) => {
     jobApp.status = status;
     await jobApp.save();
 
+    const notification = {
+        sender: employerId,
+        message: 'There is update in your job Application',
+        redirectUrl
+    };
+
+    // Add the notification to the recipient's user document
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, {
+        $push: { notifications: notification },
+    }, { new: true });
+    if (!candidate) {
+        return next(new ErrorHandler("candidate not  found", 404));
+    }
+    const notificationObject = candidate.notifications[candidate.notifications.length - 1];
+    console.log(notificationObject);
+
     res.status(200).json({
         success: true,
+        notification: notificationObject
     })
 })
 
