@@ -12,6 +12,10 @@ const jobApplicationSchema: Schema = new Schema({
         ref: 'JobPost',
         required: true,
     },
+    isFeedbackAsked: {
+        type: Boolean,
+        default: false,
+    },
     status: {
         type: String,
         enum: ['Received', 'Under Review', 'Shortlisted', "Not Selected"],

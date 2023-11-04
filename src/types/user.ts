@@ -147,6 +147,7 @@ export interface IControlledFieldSchema extends Document {
 export interface IJobApp extends Document {
     candidate: string,
     jobPost: string,
+    isFeedbackAsked: boolean,
     status: string,
 }
 // chat
@@ -165,3 +166,15 @@ export interface IChat extends Document {
     participants: [IChatParticipant, IChatParticipant];
     messages: IChatMessage[];
 }
+export interface IFeedback extends Document {
+    jobApp: mongoose.Types.ObjectId;
+    candidateQuestion: {
+        candidateId: mongoose.Types.ObjectId,
+        question: string,
+    };
+    employerResponse: {
+        employerId: mongoose.Types.ObjectId,
+        response: String
+    }
+}
+

@@ -5,6 +5,7 @@ import ErrorHandler from "../utils/errorHandler";
 export const initiateChat = catchAsyncError(async (req, res, next) => {
 
     const { appId, candidateId, employerId } = req.body;
+    console.log(req.body)
 
     if (!appId || !candidateId || !employerId) {
         return next(new ErrorHandler("all required felid not found", 400));
