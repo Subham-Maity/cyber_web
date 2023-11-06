@@ -81,8 +81,12 @@ export const getCurrCandidate = catchAsyncError(async (req, res, next) => {
     if (!id) {
         return next(new ErrorHandler("Candidate Id Not Found", 400))
     }
-    console.log(id)
+    // console.log(id)
     const candidate = await Candidate.findById({ _id: id });
+    if (!candidate) {
+        return next(new ErrorHandler("Candidate Not Found", 404));
+    }
+    candidate.notifications.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
     res.status(200).json({
         success: true,
