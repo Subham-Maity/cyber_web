@@ -50,10 +50,12 @@ const candidateSchema = new mongoose.Schema({
         type: String,
         default: "none"
     },
-    resume: {
-        type: [String],
-        default: "none"
-    },
+    resumes: [
+        {
+            name: String,    // The name of the resume
+            s3Key: String,   // S3 object key or reference
+        }
+    ],
     education: [
         {
             degree: String,

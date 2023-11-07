@@ -67,6 +67,27 @@ export const getMessages = catchAsyncError(async (req, res, next) => {
     })
 })
 
+export const getChatsByEmployer = catchAsyncError(async (req, res, next) => {
+
+    const { id: employerId } = req.params;
+
+    if (!employerId) {
+        return next(new ErrorHandler("chatId not found", 400));
+    }
+
+    const chats = await Chat.find({
+        'participants.0': employerId, // Assuming employerId is the first participant
+    })
+    if (!chats) {
+        return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        chat: chats
+    })
+})
+
 
 
 

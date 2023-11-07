@@ -8,6 +8,7 @@ import Employer from "../../model/user/Employer";
 import { IEmployer, ICandidate } from "../../types/user";
 import fs from 'fs';
 import mongoose from "mongoose";
+import { getUrlForDownloadPdf, getUrlForPdf } from "../../utils/uploadToS3";
 dotenv.config();
 
 const serverGeneratedState = "12345678"
@@ -512,3 +513,32 @@ export const getSavedCompany = catchAsyncError(async (req, res, next) => {
     })
 
 })
+
+export const uploadResumeToS3 = catchAsyncError(async (req, res, next) => {
+
+    const { name, type, candidateId, } = req.body;
+    const url = getUrlForPdf(name, type, candidateId,);
+    res.json({ success: true, url }).status(200);
+})
+export const addResume = catchAsyncError(async (req, res, next) => {
+
+    const { name, s3Key, candidateId } = req.body;
+    console.log(req.body);
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, { $addToSet: { resumes: { name, s3Key } } }, { new: true });
+    if (!candidate) {
+        return next(new ErrorHandler("candidate not found", 404));
+    }
+    const resume = candidate.resumes[candidate.resumes.length - 1];
+    res.status(200).json({
+        success: true,
+        resume
+    })
+})
+
+export const downloadResumeFromS3 = catchAsyncError(async (req, res, next) => {
+
+    const { s3Key, } = req.body;
+    const url = getUrlForDownloadPdf(s3Key);
+    res.json({ success: true, url }).status(200);
+})
+

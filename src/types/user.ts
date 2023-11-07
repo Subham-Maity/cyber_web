@@ -31,6 +31,10 @@ interface INotification {
     isRead: boolean,
     _id: mongoose.Types.ObjectId
 }
+interface IResume {
+    name: String,
+    s3Key: String,
+}
 export interface ICandidate extends Document {
     email: string;
     isEmailVerified: boolean;
@@ -39,7 +43,7 @@ export interface ICandidate extends Document {
     avatar: string;
     phoneNumber: string,
     password: string;
-    resume: string[],
+    resumes: IResume[],
     signInProvider: "linkedIn" | "jwt"
     skills: string[],
     role: string,

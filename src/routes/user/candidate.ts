@@ -1,6 +1,11 @@
 import express from 'express';
 import passport from '../../utils/passportConfig'
-import { getUserLinkedIn, getAllCandidate, saveJob, logoutCandidate, signupCandidate, loginCandidate, updateCurrCandidate, updateEducation, updateExperience, populateCandidate, getDetails, getCurrCandidate, getSaveJob, removeSavedJob, saveCompany, getSavedCompany, removeSavedCompany, updateNotification } from '../../controller/userController/candidate'
+import {
+    getUserLinkedIn,
+    getAllCandidate, saveJob,
+    logoutCandidate, signupCandidate,
+    loginCandidate, updateCurrCandidate, updateEducation, updateExperience, populateCandidate, getDetails, getCurrCandidate, getSaveJob, removeSavedJob, saveCompany, getSavedCompany, removeSavedCompany, updateNotification, uploadResumeToS3, addResume, downloadResumeFromS3
+} from '../../controller/userController/candidate'
 import { isAuthenticatedCandidate } from '../../middleware/auth';
 
 const candidateRouter = express.Router();
@@ -18,6 +23,8 @@ candidateRouter.route("/savedJob").post(saveJob).get(getSaveJob).delete(removeSa
 candidateRouter.route("/savedCompany").post(saveCompany).get(getSavedCompany).delete(removeSavedCompany);
 // others
 candidateRouter.get("/get", getAllCandidate)
+candidateRouter.route("/upload").post(uploadResumeToS3).patch(addResume)
+candidateRouter.route("/download").post(downloadResumeFromS3)
 candidateRouter.post("/populate", populateCandidate)
 candidateRouter.patch("/update/:id", updateCurrCandidate)
 candidateRouter.patch("/updateNoti/:id", updateNotification)
