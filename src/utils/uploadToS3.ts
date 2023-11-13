@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config();
 
 const bucketName = process.env.AWS_BUCKET_NAME;
+const publicBucketName = process.env.AWS_BUCKET_NAME_PUBLIC;
 const region = process.env.AWS_BUCKET_REGION;
 const accessKeyId = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_KEY;
@@ -35,4 +36,25 @@ const getUrlForDownloadPdf = (key: string) => {
     const signedUrl = s3.getSignedUrl('getObject', params);
     return signedUrl;
 }
-export { getUrlForPdf, getUrlForDownloadPdf }
+const getUrlForDeletePdf = (key: string) => {
+
+    const params = {
+        Bucket: bucketName,
+        Key: key,
+        Expires: 3600,
+    };
+    const signedUrl = s3.getSignedUrl('deleteObject', params);
+    return signedUrl;
+}
+const getUrlForUploadProfile = (key: string, ContentType: string) => {
+
+    const params = {
+        Bucket: publicBucketName,
+        Key: `profile/${key}`,
+        ContentType: ContentType
+    };
+    const signedUrl = s3.getSignedUrl('putObject', params);
+    return signedUrl;
+}
+
+export { getUrlForPdf, getUrlForDownloadPdf, getUrlForDeletePdf, getUrlForUploadProfile }

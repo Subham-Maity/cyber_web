@@ -22,4 +22,42 @@ export const isActive = async (token: string, next: NextFunction) => {
     }
 }
 
+export function calculateMatchScore(userSkills: string[], jobPrimarySkills: string[], jobSecondarySkills: string[]) {
 
+    // It will come from the Database
+    const weightOfPrimarySkill = 80;
+    const weightOfSecondarySkill = 20;
+
+
+    // Calculate score for primary skills
+    const primaryScore = calculateScoreForSkills(userSkills, jobPrimarySkills);
+    const totalPrimaryPer = (primaryScore / jobPrimarySkills.length) * 100;
+
+    // Calculate score for secondary skills
+    const secondaryScore = calculateScoreForSkills(userSkills, jobSecondarySkills);
+
+    const totalSecondaryPer = (secondaryScore / jobSecondarySkills.length) * 100;
+
+    const _80PerOfPrimaryPer = (totalPrimaryPer * weightOfPrimarySkill) / 100;
+
+    // Calculate overall score
+    const _20PerOfPrimaryPer = (totalSecondaryPer * weightOfSecondarySkill) / 100;
+    const overallScore = _80PerOfPrimaryPer + _20PerOfPrimaryPer;
+    // console.log("overallScore", _80PerOfPrimaryPer, _20PerOfPrimaryPer)
+
+    return overallScore;
+}
+
+function calculateScoreForSkills(userSkills: string[], jobSkills: string[]) {
+    let score = 0;
+
+    jobSkills.forEach((jobSkill) => {
+        const userSkillIndex = userSkills.indexOf(jobSkill);
+
+        if (userSkillIndex !== -1) {
+            score += 1;
+        }
+    });
+
+    return score;
+}

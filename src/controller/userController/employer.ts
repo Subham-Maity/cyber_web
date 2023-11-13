@@ -3,6 +3,7 @@ import ErrorHandler from "../../utils/errorHandler";
 import dotenv from 'dotenv';
 import Employer from "../../model/user/Employer";
 import { sendToken } from "../../utils/sendToken";
+import Candidate from "../../model/user/Candidate";
 
 dotenv.config();
 
@@ -163,3 +164,26 @@ export const getSavedCandidate = catchAsyncError(async (req, res, next) => {
     })
 })
 
+export const addNotificationToCandidate = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId, employerId, redirectUrl, message } = req.body;
+
+    const notification = {
+        sender: employerId,
+        message,
+        redirectUrl
+    };
+
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, {
+        $push: { notifications: notification },
+    }, { new: true });
+    if (!candidate) {
+        return next(new ErrorHandler("candidate not  found", 404));
+    }
+    const notificationObject = candidate.notifications[candidate.notifications.length - 1];
+
+    res.status(200).json({
+        success: true,
+        notification: notificationObject
+    })
+})

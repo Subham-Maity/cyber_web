@@ -8,7 +8,10 @@ import Employer from "../../model/user/Employer";
 import { IEmployer, ICandidate } from "../../types/user";
 import fs from 'fs';
 import mongoose from "mongoose";
-import { getUrlForDownloadPdf, getUrlForPdf } from "../../utils/uploadToS3";
+import { getUrlForDeletePdf, getUrlForDownloadPdf, getUrlForPdf, getUrlForUploadProfile } from "../../utils/uploadToS3";
+import JobPost from "../../model/JobPost";
+import { calculateMatchScore } from "../../utils/helper";
+import Company from "../../model/Company";
 dotenv.config();
 
 const serverGeneratedState = "12345678"
@@ -100,7 +103,7 @@ export const updateCurrCandidate = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("body not found", 400));
     }
     const { id } = req.params;
-    const candidate = await Candidate.findByIdAndUpdate({ _id: id }, req.body);
+    const candidate = await Candidate.findByIdAndUpdate({ _id: id }, req.body, { new: true });
     if (!candidate) {
         return next(new ErrorHandler("something went wrong ,try again", 500));
     }
@@ -109,6 +112,7 @@ export const updateCurrCandidate = catchAsyncError(async (req, res, next) => {
         candidate
     })
 })
+
 export const signupCandidate = catchAsyncError(async (req, res, next) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -386,6 +390,7 @@ export const getSaveJob = catchAsyncError(async (req, res, next) => {
 
     }
     const candidateTemp = await Candidate.findById(candidateId);
+    console.log(candidateTemp);
     if (!candidateTemp) {
         return next(new ErrorHandler("candidateId not found", 401));
     }
@@ -401,9 +406,9 @@ export const getSaveJob = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("candidate not found", 400));
     }
     const totalSavedJob = candidateTemp?.savedJobs.length;
-    console.log("from candidate", totalSavedJob);
+    // console.log("from candidate", totalSavedJob);
     const totalNumOfPage = Math.ceil(totalSavedJob / limit);
-
+    // console.log(candidate?.savedJobs);
     res.status(200).json({
         success: true,
         savedJobs: candidate?.savedJobs,
@@ -501,13 +506,27 @@ export const getSavedCompany = catchAsyncError(async (req, res, next) => {
     if (!candidate) {
         return next(new ErrorHandler("candidate not found", 400));
     }
+    const companies = candidate?.savedCompanies;
     const totalSavedCompany = candidateTemp?.savedCompanies.length;
-    // console.log("from candidate", totalSavedJob);
     const totalNumOfPage = Math.ceil(totalSavedCompany / limit);
+
+    const result = await Promise.all(companies.map(async (company) => {
+
+        let jobOpenings = 0;
+        if (typeof company !== "string") {
+            jobOpenings = await JobPost.countDocuments({ companyId: company._id, status: "active" })
+            const companyObject = company.toObject()
+
+            return {
+                ...companyObject,
+                jobOpenings: jobOpenings
+            };
+        } else return {}
+    }));
 
     res.status(200).json({
         success: true,
-        savedCompanies: candidate?.savedCompanies,
+        savedCompanies: result,
         totalNumOfPage,
         totalSavedCompany
     })
@@ -520,10 +539,44 @@ export const uploadResumeToS3 = catchAsyncError(async (req, res, next) => {
     const url = getUrlForPdf(name, type, candidateId,);
     res.json({ success: true, url }).status(200);
 })
+export const uploadProfileToS3 = catchAsyncError(async (req, res, next) => {
+
+    const { extension, folder, type, userId, } = req.body;
+    if (!extension || !folder || !type || !userId) {
+        return next(new ErrorHandler("all required data not found", 400));
+    }
+    const key = `${folder}/${userId}.${extension}`
+    const url = getUrlForUploadProfile(key, type);
+    res.json({ success: true, url }).status(200);
+})
+export const updateProfileAvatar = catchAsyncError(async (req, res, next) => {
+
+    const { s3Key, userId, } = req.body;
+    if (!s3Key || !userId) {
+        return next(new ErrorHandler("all required data not found", 400));
+    }
+    const publicEndpoint = process.env.AWS_PUBLIC_ENDPOINT;
+    if (!publicEndpoint) {
+        return next(new ErrorHandler("AWS_PUBLIC_ENDPOINT is not found", 404));
+    }
+
+    const avatar = `${publicEndpoint}/${s3Key}`
+    console.log(avatar);
+
+    const candidate = await Candidate.findByIdAndUpdate(userId, { avatar });
+    if (!candidate) {
+        return next(new ErrorHandler("candidate is not found", 404));
+    }
+
+
+    res.status(200).json({
+        success: true,
+        avatar: avatar
+    });
+})
 export const addResume = catchAsyncError(async (req, res, next) => {
 
     const { name, s3Key, candidateId } = req.body;
-    console.log(req.body);
     const candidate = await Candidate.findByIdAndUpdate(candidateId, { $addToSet: { resumes: { name, s3Key } } }, { new: true });
     if (!candidate) {
         return next(new ErrorHandler("candidate not found", 404));
@@ -541,4 +594,60 @@ export const downloadResumeFromS3 = catchAsyncError(async (req, res, next) => {
     const url = getUrlForDownloadPdf(s3Key);
     res.json({ success: true, url }).status(200);
 })
+
+export const deleteResumeFromS3 = catchAsyncError(async (req, res, next) => {
+
+    const { s3Key, resumeId, candidateId } = req.query;
+    console.log(req.query);
+    const url = getUrlForDeletePdf(s3Key as string);
+
+    await axios.delete(url);
+    const candidate = await Candidate.findByIdAndUpdate(candidateId, { $pull: { resumes: { _id: resumeId } } });
+
+    res.status(200).json({
+        success: true,
+        resumeId,
+
+    })
+})
+
+export const getRecommendedJobs = catchAsyncError(async (req, res, next) => {
+
+    const { candidateId } = req.query;
+    if (!candidateId) {
+        return next(new ErrorHandler("candidateId not found", 400));
+    }
+    const candidate = await Candidate.findById(candidateId);
+
+    if (!candidate) {
+        return next(new ErrorHandler("candidate not found", 404));
+    }
+
+    const relevantJobs = await JobPost.find({
+        $or: [
+            { primarySkills: { $in: candidate.skills } },
+            { secondarySkills: { $in: candidate.skills } },
+        ],
+    })
+        .sort({ createdAt: -1 })
+
+    const totalPerRequired = 90;
+    const jobRecommendations = relevantJobs.map(job => ({
+        job: job,
+        score: Math.floor(calculateMatchScore(candidate.skills, job.primarySkills, job.secondarySkills)),
+    }));
+
+    const sortedRecommendations = jobRecommendations.sort((a, b) => b.score - a.score);
+    const filteredRecommendations = sortedRecommendations.filter(job => job.score > totalPerRequired);
+    res.status(200).json({
+        success: true,
+        length: filteredRecommendations.length,
+        jobs: filteredRecommendations
+    });
+
+})
+
+
+
+
 

@@ -3,6 +3,7 @@ import ErrorHandler from "../utils/errorHandler";
 import Company from "../model/Company";
 import fs from 'fs'
 import Candidate from "../model/user/Candidate";
+import JobPost from "../model/JobPost";
 
 export const addCompany = catchAsyncError(async (req, res, next) => {
 
@@ -103,15 +104,18 @@ export const getCompanies = catchAsyncError(async (req, res, next) => {
     }
 
     const savedCompanies = candidate.savedCompanies as string[];
-    let result = companies.map((job) => {
-        const isSaved = savedCompanies.includes(job._id);
-        const companyObject = job.toObject();
+
+    const result = await Promise.all(companies.map(async (company) => {
+        const isSaved = savedCompanies.includes(company._id);
+        const jobOpenings = await JobPost.countDocuments({ companyId: company._id, status: "active" });
+        const companyObject = company.toObject();
+
         return {
             ...companyObject,
             isSaved,
+            jobOpenings
         };
-    })
-
+    }));
     res.status(200).json({
         success: true,
         totalNumOfPage,

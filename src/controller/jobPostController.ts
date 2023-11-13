@@ -66,7 +66,7 @@ export const deleteJobPost = catchAsyncError(async (req, res, next) => {
 
 export const getJobPosts = catchAsyncError(async (req, res, next) => {
 
-    const { page, location, jobType, jobCategory, workMode, salary, preferredExperience, candidateId } = req.query;
+    const { page, location, jobType, jobCategory, workMode, status, salary, preferredExperience, candidateId, companyId } = req.query;
 
     if (!candidateId) {
         return next(new ErrorHandler("CandidateId Not found", 404))
@@ -99,6 +99,13 @@ export const getJobPosts = catchAsyncError(async (req, res, next) => {
         desiredExperience = desiredExperience.split(",");
         queryObject.preferredExperience = { $all: desiredExperience };
     }
+    if (companyId) {
+        queryObject.companyId = companyId;
+    }
+    if (status) {
+        queryObject.status = status
+    }
+
     //user provides a number, such as salary=4, to find job posts with salary ranges that include this number:
     const userProvidedSalary = Number(salary);
     if (!isNaN(userProvidedSalary) && salary !== "-1") {

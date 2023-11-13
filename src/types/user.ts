@@ -115,6 +115,7 @@ export interface ICompany extends Document {
     socialSites: string[];
     benefits: string[];
     isSaved?: boolean;
+    jobOpenings?: number
 }
 
 export interface IJobPost extends Document {

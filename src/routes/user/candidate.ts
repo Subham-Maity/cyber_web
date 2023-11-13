@@ -4,7 +4,7 @@ import {
     getUserLinkedIn,
     getAllCandidate, saveJob,
     logoutCandidate, signupCandidate,
-    loginCandidate, updateCurrCandidate, updateEducation, updateExperience, populateCandidate, getDetails, getCurrCandidate, getSaveJob, removeSavedJob, saveCompany, getSavedCompany, removeSavedCompany, updateNotification, uploadResumeToS3, addResume, downloadResumeFromS3
+    loginCandidate, updateCurrCandidate, updateEducation, updateExperience, populateCandidate, getDetails, getCurrCandidate, getSaveJob, removeSavedJob, saveCompany, getSavedCompany, removeSavedCompany, updateNotification, uploadResumeToS3, addResume, downloadResumeFromS3, getRecommendedJobs, deleteResumeFromS3, uploadProfileToS3, updateProfileAvatar
 } from '../../controller/userController/candidate'
 import { isAuthenticatedCandidate } from '../../middleware/auth';
 
@@ -23,8 +23,12 @@ candidateRouter.route("/savedJob").post(saveJob).get(getSaveJob).delete(removeSa
 candidateRouter.route("/savedCompany").post(saveCompany).get(getSavedCompany).delete(removeSavedCompany);
 // others
 candidateRouter.get("/get", getAllCandidate)
+candidateRouter.get("/recommended", getRecommendedJobs);
+
 candidateRouter.route("/upload").post(uploadResumeToS3).patch(addResume)
+candidateRouter.route("/uploadProfile").post(uploadProfileToS3).patch(updateProfileAvatar)
 candidateRouter.route("/download").post(downloadResumeFromS3)
+candidateRouter.route("/delete").delete(deleteResumeFromS3)
 candidateRouter.post("/populate", populateCandidate)
 candidateRouter.patch("/update/:id", updateCurrCandidate)
 candidateRouter.patch("/updateNoti/:id", updateNotification)

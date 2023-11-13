@@ -113,6 +113,12 @@ const candidateSchema = new mongoose.Schema({
     ],
     savedJobs: [{ type: mongoose.Types.ObjectId, ref: 'JobPost' }],
     savedCompanies: [{ type: mongoose.Types.ObjectId, ref: 'Company' }],
+    recommendedJobs: [
+        {
+            type: mongoose.Types.ObjectId, ref: 'JobPost',
+            isViewed: false
+        }
+    ]
 },
     { timestamps: true }
 );
