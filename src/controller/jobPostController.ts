@@ -28,12 +28,11 @@ export const getDetails = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("job post not found", 400));
     }
 
-    const job = await JobPost.findOne({ _id: id });
-    const company = await Company.findById({ _id: job?.companyId });
+    const job = await JobPost.findOne({ _id: id }).populate('companyId');
+
 
     res.status(200).json({
         job,
-        company,
         success: true,
     })
 })

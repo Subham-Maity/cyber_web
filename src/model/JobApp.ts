@@ -16,6 +16,10 @@ const jobApplicationSchema: Schema = new Schema({
         type: Boolean,
         default: false,
     },
+    testScore: Number,
+    appliedWithResume: String,
+    jobLetter: String,
+
     status: {
         type: String,
         enum: ['Received', 'Under Review', 'Shortlisted', "Not Selected"],

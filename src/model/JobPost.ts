@@ -43,7 +43,16 @@ const jobPostSchema: Schema = new Schema({
     salary: {
         minimum: Number,
         maximum: Number,
-        isDisclosed: Boolean
+        isDisclosed: Boolean,
+        currency: {
+            type: String,
+            default: "Canadian dollars"
+        },
+        salary: Number,
+        period: {
+            type: String,
+            enum: ["monthly", "yearly", "weekly", "hourly"]
+        }
     },
     status: {
         type: String,

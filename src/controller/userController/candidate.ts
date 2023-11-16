@@ -103,7 +103,7 @@ export const updateCurrCandidate = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("body not found", 400));
     }
     const { id } = req.params;
-    const candidate = await Candidate.findByIdAndUpdate({ _id: id }, req.body, { new: true });
+    const candidate = await Candidate.findOneAndUpdate({ _id: id }, req.body, { new: true });
     if (!candidate) {
         return next(new ErrorHandler("something went wrong ,try again", 500));
     }

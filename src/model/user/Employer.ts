@@ -29,6 +29,10 @@ const employerSchema = new mongoose.Schema({
         unique: true,
         // validate: [validator.isEmail, "please enter a valid email"],
     },
+    gender: {
+        type: String,
+        enum: ["male", "female", "others"]
+    },
     freeCount: {
         type: Number,
         default: 5,
@@ -40,32 +44,49 @@ const employerSchema = new mongoose.Schema({
     },
     avatar: {
         type: String,
-        default: "none"
+        default: ""
     },
     phoneNumber: {
         type: String,
-        default: "none"
+        default: ""
     },
-    companyName: {
-        type: String,
-
+    company: {
+        name: String,
+        companyId: {
+            type: mongoose.Types.ObjectId,
+            ref: 'Company',
+        },
     },
-    location: {
-        type: String,
-
+    location:
+    {
+        city: String,
+        country: String,
+    },
+    socialSites: {
+        linkedIn: {
+            type: String,
+            default: ""
+        },
+        twitter: {
+            type: String,
+            default: ""
+        },
+        facebook: {
+            type: String,
+            default: ""
+        },
+        website: {
+            type: String,
+            default: ""
+        },
     },
     industry: {
         type: String,
-
     },
-    description: {
+    bio: {
         type: String,
+    },
 
-    },
-    socialSites: {
-        type: [String],
-        default: [],
-    },
     jobs: [
         {
             type: mongoose.Types.ObjectId,

@@ -18,7 +18,7 @@ export const getAutoComplete = (model: any) => {
             },
             {
                 "$project": {
-                    "_id": 0,
+                    "_id": 1,
                     "name": 1 // Include the 'name' field in the result
                 }
             }

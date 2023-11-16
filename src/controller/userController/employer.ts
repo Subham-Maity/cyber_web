@@ -58,6 +58,46 @@ export const getCurrEmployer = catchAsyncError(async (req, res, next) => {
     });
 })
 
+export const updateCurrEmployer = catchAsyncError(async (req, res, next) => {
+
+    if (!req.body) {
+        return next(new ErrorHandler("body not found", 400));
+    }
+    const { id } = req.params;
+    const employer = await Employer.findByIdAndUpdate({ _id: id }, req.body, { new: true });
+    if (!employer) {
+        return next(new ErrorHandler("something went wrong ,try again", 500));
+    }
+    res.status(200).json({
+        success: true,
+        employer
+    })
+})
+export const updateProfileAvatar = catchAsyncError(async (req, res, next) => {
+
+    const { s3Key, userId, } = req.body;
+    if (!s3Key || !userId) {
+        return next(new ErrorHandler("all required data not found", 400));
+    }
+    const publicEndpoint = process.env.AWS_PUBLIC_ENDPOINT;
+    if (!publicEndpoint) {
+        return next(new ErrorHandler("AWS_PUBLIC_ENDPOINT is not found", 404));
+    }
+
+    const avatar = `${publicEndpoint}/${s3Key}`
+    // console.log(avatar);
+
+    const employer = await Employer.findByIdAndUpdate(userId, { avatar });
+    if (!employer) {
+        return next(new ErrorHandler("candidate is not found", 404));
+    }
+
+
+    res.status(200).json({
+        success: true,
+        avatar: avatar
+    });
+})
 export const getAllEmployer = catchAsyncError(async (req, res, next) => {
 
     const candidates = await Employer.find();

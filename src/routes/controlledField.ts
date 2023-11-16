@@ -3,6 +3,7 @@ import JobCategory from '../model/controlledField/jobCategory';
 import JobPosition from '../model/controlledField/JobPosition';
 import CompanyCategory from '../model/controlledField/companyCategory';
 import { getAutoComplete } from '../controller/controlledField/controlledFeild.ts';
+import Company from '../model/Company';
 const controlledFieldRouter = express.Router();
 
 // controlledFieldRouter.route("/companyCategory/add").post(addCompanyCategory);
@@ -16,6 +17,7 @@ controlledFieldRouter.route("/jobCategory/search").get(getAutoComplete(JobCatego
 // controlledFieldRouter.route("/jobTitle/add").post(addJobTitle);
 // controlledFieldRouter.route("/jobTitle/delete").delete(deleteJobTitle);
 controlledFieldRouter.route("/jobTitle/search").get(getAutoComplete(JobPosition));
+controlledFieldRouter.route("/companyName/search").get(getAutoComplete(Company));
 
 
 

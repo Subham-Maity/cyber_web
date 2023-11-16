@@ -25,6 +25,7 @@ const candidateSchema = new mongoose.Schema({
     },
     experienceInShort: {
         type: String,
+        enum: ["fresher", "intermediate", "expert"]
     },
     email: {
         type: String,
@@ -44,11 +45,11 @@ const candidateSchema = new mongoose.Schema({
     // },
     avatar: {
         type: String,
-        default: "none"
+        default: ""
     },
     phoneNumber: {
         type: String,
-        default: "none"
+        default: ""
     },
     resumes: [
         {
@@ -84,8 +85,22 @@ const candidateSchema = new mongoose.Schema({
     }
     ,
     socialSites: {
-        type: [String],
-        default: [],
+        linkedIn: {
+            type: String,
+            default: ""
+        },
+        twitter: {
+            type: String,
+            default: ""
+        },
+        github: {
+            type: String,
+            default: ""
+        },
+        website: {
+            type: String,
+            default: ""
+        },
     },
     skills: {
         type: [String],
@@ -101,6 +116,18 @@ const candidateSchema = new mongoose.Schema({
     },
     testScore: {
         type: Number,
+    },
+    expectedSalary: {
+        currency: {
+            type: String,
+            default: "Canadian dollars"
+        },
+        salary: Number,
+        period: {
+            type: String,
+            enum: ["monthly", "yearly", "weekly", "hourly"]
+        }
+
     },
     notifications: [
         {
@@ -118,7 +145,11 @@ const candidateSchema = new mongoose.Schema({
             type: mongoose.Types.ObjectId, ref: 'JobPost',
             isViewed: false
         }
-    ]
+    ],
+    profileCompleted: {
+        type: Number,
+        default: 0,
+    },
 },
     { timestamps: true }
 );
@@ -131,8 +162,47 @@ candidateSchema.pre<ICandidate>('save', async function (next) {
 
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+
     next();
 });
+
+candidateSchema.pre<ICandidate>('findOneAndUpdate', async function (next) {
+
+    const requiredFields: (keyof ICandidate)[] = ['firstName', 'lastName', 'email', "gender", "experienceInShort", "avatar", "resumes", "phoneNumber", 'location', 'skills', "bio", "expectedSalary", 'education', 'experience'];
+    const totalFields = requiredFields.length;
+    const completedFields = requiredFields.reduce((count, field) => {
+        const value = this.get(field);
+
+        if (typeof value === 'boolean') {
+            return count + (value ? 1 : 0);
+        }
+
+        return count + (value !== undefined && value !== null && (typeof value !== 'string' || value.trim() !== '') ? 1 : 0);
+    }, 0);
+
+    // Calculate and return the completeness as a percentage
+    this.profileCompleted = Math.round((completedFields / totalFields) * 100);
+    next();
+});
+
+//Define a virtual property for profile completeness
+// candidateSchema.pre('findOneAndUpdate').get(function (this: ICandidate) {
+
+//     const requiredFields: (keyof ICandidate)[] = ['firstName', 'lastName', 'email', "gender", "experienceInShort", "avatar", "resumes", "phoneNumber", 'location', 'skills', "bio", "expectedSalary", 'education', 'experience'];
+//     const totalFields = requiredFields.length;
+//     const completedFields = requiredFields.reduce((count, field) => {
+//         const value = this.get(field);
+
+//         if (typeof value === 'boolean') {
+//             return count + (value ? 1 : 0);
+//         }
+
+//         return count + (value !== undefined && value !== null && (typeof value !== 'string' || value.trim() !== '') ? 1 : 0);
+//     }, 0);
+
+//     // Calculate and return the completeness as a percentage
+//     return Math.round((completedFields / totalFields) * 100);
+// });
 
 candidateSchema.methods.createJWT = function (this: ICandidate, accessToken?: string) {
     if (!process.env.JWT_SECRET) {

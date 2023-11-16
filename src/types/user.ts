@@ -35,6 +35,19 @@ interface IResume {
     name: String,
     s3Key: String,
 }
+interface ISocial {
+    linkedIn: string,
+    twitter: string,
+    github: string,
+    website: string,
+}
+interface FSocial {
+    linkedIn: string,
+    twitter: string,
+    facebook: string,
+    website: string,
+}
+
 export interface ICandidate extends Document {
     email: string;
     isEmailVerified: boolean;
@@ -47,9 +60,16 @@ export interface ICandidate extends Document {
     signInProvider: "linkedIn" | "jwt"
     skills: string[],
     role: string,
+    location: ILocation,
+    expectedSalary: {
+        currency: string,
+        salary: number,
+        period: string
+    },
+    profileCompleted: number,
     experience: IExperience[],
     education: IEducation[],
-    socialSites: string[];
+    socialSites: ISocial;
     experienceInShort: string,
     gender: string,
     bio: string,
@@ -68,16 +88,24 @@ export interface IEmployer extends Document {
     lastName: string;
     avatar: string;
     phoneNumber: string,
-    companyName: string,
-    password: string;
-    location: string,
+    company: {
+        name: string,
+        companyId: mongoose.Types.ObjectId,
+    },
+    password?: string;
+    location: ILocation,
     resume: string,
-    role: string,
     industry: string,
+    socialSites: FSocial;
     description: string,
-    savedCandidates: string[] | ICandidate[],
-    jobs: string,
-    signInProvider: "linkedIn" | "jwt"
+    gender: "male" | "female" | "others";
+    freeCount: string;
+    jobs: string[],
+    role: string,
+    bio: string,
+    signInProvider?: "linkedIn" | "jwt"
+    savedCandidates: string[],
+    _id: string,
     createJWT(accessToken?: string): string;
     comparePassword(givenPassword: string): Promise<boolean>;
 
@@ -152,6 +180,9 @@ export interface IControlledFieldSchema extends Document {
 export interface IJobApp extends Document {
     candidate: string,
     jobPost: string,
+    testScore: number,
+    appliedWithResume: string,
+    jobLetter: string,
     isFeedbackAsked: boolean,
     status: string,
 }
