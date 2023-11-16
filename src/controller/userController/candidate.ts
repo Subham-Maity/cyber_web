@@ -631,7 +631,7 @@ export const getRecommendedJobs = catchAsyncError(async (req, res, next) => {
     })
         .sort({ createdAt: -1 })
 
-    const totalPerRequired = 90;
+    const totalPerRequired = 60;
     const jobRecommendations = relevantJobs.map(job => ({
         job: job,
         score: Math.floor(calculateMatchScore(candidate.skills, job.primarySkills, job.secondarySkills)),
