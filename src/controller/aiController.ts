@@ -16,28 +16,24 @@ import dotenv from 'dotenv'
 dotenv.config();
 import axios from "axios";
 import ErrorHandler from "../utils/errorHandler";
-import { json } from "stream/consumers";
+import { getChatLLM, getEmbeddings, getPineconeIndex, combineDocuments } from "../utils/langchainHelper";
 
 
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "";
 const azureApiKey = process.env.AZURE_OPENAI_KEY || "";
 
-function combineDocuments(docs: any) {
-    return docs.map((doc: any) => doc.pageContent).join('\n\n')
-}
+
 export const newUploadToPc = catchAsyncError(async (req, res, next) => {
 
-    if (!process.env.PINECONE_API_KEY || !process.env.PINECONE_ENVIRONMENT || !process.env.PINECONE_INDEX) {
-        return next(new ErrorHandler("PINECONE_ENVIRONMENT apiKey or environment not found name not found", 400));
-    }
+    const { candidateId } = req.body;
 
-
-    const path = `uploads/shiva_resume_mar27.pdf`
+    // loading the document
+    const path = `uploads/jesc105.pdf`
     const loader = new PDFLoader(path);
-
     const docs = await loader.load();
 
+    // splitting the document into chunks
     const splitter = new RecursiveCharacterTextSplitter(
         {
             separators: ["\n\n", "\n", " ", ""],
@@ -46,6 +42,8 @@ export const newUploadToPc = catchAsyncError(async (req, res, next) => {
         }
     );
     const splittedDocs = await splitter.splitDocuments(docs);
+
+    // reducing the docs to optimize cost on pinecone
     const reducedDocs = splittedDocs.map((doc) => {
         const reducedMetadata = { ...doc.metadata };
         delete reducedMetadata.pdf; // Remove the 'pdf' field
@@ -55,99 +53,92 @@ export const newUploadToPc = catchAsyncError(async (req, res, next) => {
         });
     });
 
+    // getting the required things
+    const pineconeIndex = getPineconeIndex(next);
+    const embeddings = getEmbeddings(next);
+    if (!pineconeIndex || !embeddings) {
+        return next(new ErrorHandler("some of required term not found", 500))
+    }
 
-    const pinecone = new Pinecone({
-        apiKey: process.env.PINECONE_API_KEY,
-        environment: process.env.PINECONE_ENVIRONMENT,
-    });
-
-    const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
-
-
-    const embeddings = new OpenAIEmbeddings({
-        azureOpenAIApiKey: process.env.AZURE_OPENAI_KEY,
-        azureOpenAIApiVersion: "2023-05-15",
-        azureOpenAIApiInstanceName: "cyberlevels",
-        azureOpenAIApiDeploymentName: "cyberlevels-resume",
-    });
-
-    const result = await PineconeStore.fromDocuments(
+    // inserting the embeddings to pinecone
+    await PineconeStore.fromDocuments(
         reducedDocs,
         embeddings,
         {
             pineconeIndex,
+            namespace: candidateId
         }
     );
 
-
-
-    res.json(reducedDocs);
-
+    res.status(200).json({
+        success: true,
+        response: `document inserted to pinecone successfully. The reduced chunk size is ${reducedDocs.length}.`
+    })
 }
 )
-
-
 export const newQueryToPc = catchAsyncError(async (req, res, next) => {
 
-    if (!process.env.PINECONE_API_KEY || !process.env.PINECONE_ENVIRONMENT || !process.env.PINECONE_INDEX) {
-        return next(new ErrorHandler("PINECONE_ENVIRONMENT apiKey or environment not found name not found", 400));
+    const { candidateId, query } = req.query;
+    const namespace = candidateId as string;
+    const question = query as string;
+
+    // get Required things
+    const pineconeIndex = getPineconeIndex(next);
+    const embeddings = getEmbeddings(next);
+    const llm = getChatLLM(next);
+
+    if (!pineconeIndex || !embeddings || !llm) {
+        return next(new ErrorHandler("some of required term not found", 500))
     }
 
-    const pinecone = new Pinecone({
-        apiKey: process.env.PINECONE_API_KEY,
-        environment: process.env.PINECONE_ENVIRONMENT,
-    });
-
-    const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
-
-
-    const embeddings = new OpenAIEmbeddings({
-        azureOpenAIApiKey: process.env.AZURE_OPENAI_KEY,
-        azureOpenAIApiVersion: "2023-05-15",
-        azureOpenAIApiInstanceName: "cyberlevels",
-        azureOpenAIApiDeploymentName: "cyberlevels-resume",
-    });
-
-    const llm = new ChatOpenAI({
-        temperature: 1, azureOpenAIApiKey: process.env.AZURE_OPENAI_KEY,
-        azureOpenAIApiVersion: "2023-05-15",
-        azureOpenAIApiInstanceName: "cyberlevels",
-        azureOpenAIApiDeploymentName: "cyberlevels",
-    })
+    // setUp Retriever
     const vectorStore = await PineconeStore.fromExistingIndex(
         embeddings,
         {
             pineconeIndex,
+            namespace,
         }
     );
-
-
     const retriever = vectorStore.asRetriever();
 
+    // setUp prompt Templates
     const standaloneQuestionTemplate = 'Given a question, convert it to a standalone question. question: {question} standalone question:'
-    const answerTemplate = `You are a helpful and enthusiastic career counselor who can answer a given question about candidate resume based on the context provided. Try to find the answer in the context. If you really don't know the answer, say "I'm sorry, I don't know the answer to that." Don't try to make up an answer. Always speak as if you were chatting to a candidate who is looking for a job.
+    // const answerTemplate = `You are a helpful and enthusiastic career counselor who can answer a given question about candidate resume based on the context provided. Try to find the answer in the context. If you really don't know the answer, say "I'm sorry, I don't know the answer to that." Don't try to make up an answer. Always speak as if you were chatting to a candidate who is looking for a job.
+    //                         context: {context}
+    //                         question: {question}
+    //                         answer: `
+    const answerTemplate = `You are a helpful and enthusiastic science teacher who can answer a given question about
+    science based on the context provided. Try to find the answer in the context.
+    If you really don't know the answer, say "I'm sorry, I don't know the answer to that."
+    Don't try to make up an answer.
+    Always speak as if you were chatting to a student who is curious about the science.
                             context: {context}
                             question: {question}
                             answer: `
+    // setUp promptTemplate instance
     const answerPrompt = PromptTemplate.fromTemplate(answerTemplate);
     const standaloneQuestionPrompt = PromptTemplate.fromTemplate(standaloneQuestionTemplate)
 
-    const standaloneQuestionChain = standaloneQuestionPrompt.pipe(llm).pipe(new StringOutputParser());
+    // setUp the related chains
+    const standaloneQuestionChain = standaloneQuestionPrompt
+        .pipe(llm)
+        .pipe(new StringOutputParser());
+
     const retrieverChain = RunnableSequence.from([
         prevResult => prevResult.standalone_question,
         retriever,
         combineDocuments
     ])
-
     const answerChain = answerPrompt
         .pipe(llm)
-    // .pipe(new StringOutputParser())
+        .pipe(new StringOutputParser())
 
-
+    // combine the related  chains to get output for a given input
     const chain = RunnableSequence.from([
         {
             standalone_question: standaloneQuestionChain,
-            original_input: new RunnablePassthrough()
+            original_input: new RunnablePassthrough(),
+
         },
         {
             context: retrieverChain,
@@ -156,17 +147,16 @@ export const newQueryToPc = catchAsyncError(async (req, res, next) => {
         answerChain
     ])
 
+    // invoking the combined chain to get response
     const response = await chain.invoke({
-        question: 'how i can improve my resume make it 10 bullet points.'
+        question
     })
 
-
-
-
-    res.json(response)
-
-}
-)
+    res.status(200).json({
+        success: true,
+        response
+    })
+})
 
 export const chatWithAiUsingRest = catchAsyncError(async (req, res, next) => {
 
@@ -189,6 +179,7 @@ export const chatWithAiUsingRest = catchAsyncError(async (req, res, next) => {
             "api-key": `${azureApiKey}`
         }
     })
+
     res.send({ result: data });
 }
 )
@@ -466,6 +457,4 @@ export const deleteFromPinecone = catchAsyncError(async (req, res, next) => {
     res.status(200).json({
         message: "deleted successfully",
     });
-
-
 })
