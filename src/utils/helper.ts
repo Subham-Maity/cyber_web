@@ -48,7 +48,7 @@ export function calculateMatchScore(userSkills: string[], jobPrimarySkills: stri
     return overallScore;
 }
 
-function calculateScoreForSkills(userSkills: string[], jobSkills: string[]) {
+export function calculateScoreForSkills(userSkills: string[], jobSkills: string[]) {
     let score = 0;
 
     jobSkills.forEach((jobSkill) => {

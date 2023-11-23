@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IJobPost } from '../types/user';
+import { IJobPost } from '../types/jobPost';
 import Candidate from './user/Candidate';
 
 

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IChat } from '../types/user';
+import { IChat } from '../types/chat';
 
 const chatSchema: Schema = new mongoose.Schema({
     jobApp: {

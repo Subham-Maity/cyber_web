@@ -17,12 +17,12 @@ export const sendTokenForAdmin = (user: any, statusCode: number, res: Response) 
 export const sendToken = (user: any, statusCode: number, res: Response, accessToken?: string) => {
   let token = accessToken ? user.createJWT(accessToken) : user.createJWT();
 
-  console.log("accestoken", accessToken);
-  console.log("jwtToken", token);
+  // console.log("accestoken", accessToken);
+  // console.log("jwtToken", token);
 
   // one day=24*60*60*1000
   const options = {
-    httpOnly: true,
+    httpOnly: process.env.NODE_ENV === 'production',
     expires: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
     // secure: process.env.NODE_ENV === 'production',
   };

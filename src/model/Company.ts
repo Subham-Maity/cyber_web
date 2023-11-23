@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { ICompany } from '../types/user';
+import { ICompany } from '../types/company';
 const companySchema: Schema = new Schema({
     name: {
         type: String,

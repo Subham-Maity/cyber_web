@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IJobApp } from '../types/user';
+import { IJobApp } from '../types/jobApp';
 
 const jobApplicationSchema: Schema = new Schema({
     candidate: {

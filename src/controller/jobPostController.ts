@@ -4,6 +4,10 @@ import JobPost from "../model/JobPost";
 import fs from 'fs'
 import Company from "../model/Company";
 import Candidate from "../model/user/Candidate";
+import { calculateMatchScore, calculateScoreForSkills } from "../utils/helper";
+import { ICandidate } from "../types/user";
+import { IJobPost } from "../types/jobPost";
+import mongoose from "mongoose";
 
 export const addJobPost = catchAsyncError(async (req, res, next) => {
 
@@ -24,15 +28,29 @@ export const addJobPost = catchAsyncError(async (req, res, next) => {
 export const getDetails = catchAsyncError(async (req, res, next) => {
 
     const { id } = req.params;
+    // this could be done using auth middlewere by req.user
     if (!id) {
         return next(new ErrorHandler("job post not found", 400));
     }
 
     const job = await JobPost.findOne({ _id: id }).populate('companyId');
+    if (!job || !req.user) {
+        return next(new ErrorHandler("job post not found", 404));
+    }
+    const candidate = req.user as ICandidate
 
+    const score = Math.floor(calculateMatchScore(candidate.skills, job.primarySkills, job.secondarySkills));
+
+    const jobObject = job.toObject();
+    const jobWithScore = {
+        ...jobObject,
+        matchScore: score,
+    };
+
+    console.log(jobWithScore)
 
     res.status(200).json({
-        job,
+        job: jobWithScore,
         success: true,
     })
 })
@@ -130,6 +148,7 @@ export const getJobPosts = catchAsyncError(async (req, res, next) => {
     const totalNumOfPage = Math.ceil(totalJobPost / limit);
     // console.log(totalNumOfPage);
 
+
     // is jobSaved by the candidate who is requesting
     const candidate = await Candidate.findById({ _id: candidateId });
     if (!candidate) {
@@ -186,3 +205,36 @@ export const populateJobPost = catchAsyncError(async (req, res, next) => {
     res.send({ msg: "true" })
 
 })
+
+export const getRelatedJobs = catchAsyncError(async (req, res, next) => {
+
+    const { jobId } = req.query;
+    if (!jobId) {
+        return next(new ErrorHandler("jobId  not Found", 400));
+    }
+    const currJob = await JobPost.findById(jobId, "primarySkills");
+    if (!currJob) {
+        return next(new ErrorHandler("job not Found", 404));
+    }
+    const relevantJobs = await JobPost.find({
+        _id: { $ne: currJob._id },
+        primarySkills: {
+            $in: currJob?.primarySkills,
+        }
+    }, "primarySkills").sort({ createdAt: -1 });
+
+    const relatedJobs = relevantJobs.map(job => ({
+        job: job,
+        score: Math.floor(calculateScoreForSkills(job.primarySkills, currJob.primarySkills))
+    }))
+
+    const sortedRelatedJobs = relatedJobs.sort((a, b) => b.score - a.score).slice(0, Math.min(5, relatedJobs.length));
+    const jobIds = sortedRelatedJobs.map(job => job.job._id);
+    const fullRelatedJobs = await JobPost.find({ _id: { $in: jobIds } });
+
+    res.status(200).json({
+        success: true,
+        jobs: fullRelatedJobs
+    })
+})
+

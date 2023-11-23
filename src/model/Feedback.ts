@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IFeedback } from '../types/user';
+import { IFeedback } from '../types/jobApp';
 
 const FeedbackSchema: Schema = new mongoose.Schema({
     jobApp: {
