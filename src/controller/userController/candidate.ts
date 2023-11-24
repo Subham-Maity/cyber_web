@@ -537,6 +537,7 @@ export const uploadResumeToS3 = catchAsyncError(async (req, res, next) => {
 
     const { name, type, candidateId, } = req.body;
     const url = getUrlForPdf(name, type, candidateId,);
+    console.log(url);
     res.json({ success: true, url }).status(200);
 })
 export const uploadProfileToS3 = catchAsyncError(async (req, res, next) => {

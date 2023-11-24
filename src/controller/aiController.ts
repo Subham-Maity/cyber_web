@@ -1,22 +1,26 @@
-import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { PDFLoader } from "langchain/document_loaders/fs/pdf";
-import { CharacterTextSplitter, RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { Document } from "langchain/document";
-import { PineconeStore } from "langchain/vectorstores/pinecone";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { VectorDBQAChain, RetrievalQAChain } from "langchain/chains";
-import { PromptTemplate } from "langchain/prompts";
-import { OpenAI } from "langchain/llms/openai";
+import { RetrievalQAChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { Document } from "langchain/document";
+import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI } from "langchain/llms/openai";
+import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableSequence, RunnablePassthrough } from "langchain/schema/runnable";
+import { RunnablePassthrough, RunnableSequence } from "langchain/schema/runnable";
+import { CharacterTextSplitter, RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { PineconeStore } from "langchain/vectorstores/pinecone";
 import catchAsyncError from "../middleware/catchAsyncError";
-import dotenv from 'dotenv'
-dotenv.config();
-import axios from "axios";
 import ErrorHandler from "../utils/errorHandler";
-import { getChatLLM, getEmbeddings, getPineconeIndex, combineDocuments } from "../utils/langchainHelper";
+import { combineDocuments, getChatLLM, getEmbeddings, getPineconeIndex } from "../utils/langchainHelper";
+import axios from "axios";
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+
+import { getUrlForDownloadPdf } from "../utils/uploadToS3";
+import { NextFunction } from "express";
+dotenv.config();
 
 
 
@@ -83,9 +87,11 @@ export const newQueryToPc = catchAsyncError(async (req, res, next) => {
     const question = query as string;
 
     // get Required things
+    const tokenUsage = { tokens: 0, totalTokenCount: 0 };
     const pineconeIndex = getPineconeIndex(next);
     const embeddings = getEmbeddings(next);
-    const llm = getChatLLM(next);
+    const llm = getChatLLM(next, tokenUsage);
+
 
     if (!pineconeIndex || !embeddings || !llm) {
         return next(new ErrorHandler("some of required term not found", 500))
@@ -150,10 +156,11 @@ export const newQueryToPc = catchAsyncError(async (req, res, next) => {
     // invoking the combined chain to get response
     const response = await chain.invoke({
         question
-    })
+    });
 
     res.status(200).json({
         success: true,
+        tokenUsage,
         response
     })
 })
@@ -183,7 +190,6 @@ export const chatWithAiUsingRest = catchAsyncError(async (req, res, next) => {
     res.send({ result: data });
 }
 )
-
 export const uploadResumeToPinecone = catchAsyncError(async (req, res, next) => {
 
     if (!req.file) {
@@ -264,8 +270,6 @@ export const uploadResumeToPinecone = catchAsyncError(async (req, res, next) => 
 
 
 })
-
-
 export const queryToPinecone = catchAsyncError(async (req, res, next) => {
 
 
@@ -431,7 +435,6 @@ export const query = catchAsyncError(async (req, res, next) => {
 //     });
 
 // })
-
 export const deleteFromPinecone = catchAsyncError(async (req, res, next) => {
 
 
@@ -450,11 +453,177 @@ export const deleteFromPinecone = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("index name not found", 400));
     }
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
-    await pineconeIndex.deleteAll();
-    // const ns = pineconeIndex.namespace(namespace);
-    // const response = await ns.deleteAll();
+    // await pineconeIndex.deleteAll();
+    const ns = pineconeIndex.namespace(namespace);
+    const response = await ns.deleteAll();
 
     res.status(200).json({
         message: "deleted successfully",
     });
+})
+
+const downloadResumeToServer = async (s3Key: string, filePath: string) => {
+
+    const url = getUrlForDownloadPdf(s3Key)
+    const response = await axios.get(url, { responseType: "arraybuffer" });
+    fs.writeFileSync(filePath, Buffer.from(response.data));
+}
+const uploadToPinecone = async (candidateId: string, filePath: string, next: NextFunction) => {
+
+    // loading the document
+    const loader = new PDFLoader(filePath);
+    const docs = await loader.load();
+
+    // splitting the document into chunks
+    const splitter = new RecursiveCharacterTextSplitter(
+        {
+            separators: ["\n\n", "\n", " ", ""],
+            chunkSize: 500,
+            chunkOverlap: 30
+        }
+    );
+    const splittedDocs = await splitter.splitDocuments(docs);
+
+    // reducing the docs to optimize cost on pinecone
+    const reducedDocs = splittedDocs.map((doc) => {
+        const reducedMetadata = { ...doc.metadata };
+        delete reducedMetadata.pdf; // Remove the 'pdf' field
+        return new Document({
+            pageContent: doc.pageContent,
+            metadata: reducedMetadata,
+        });
+    });
+
+    // getting the required things
+    const pineconeIndex = getPineconeIndex(next);
+    const embeddings = getEmbeddings(next);
+    if (!pineconeIndex || !embeddings) {
+        return next(new ErrorHandler("some of required term not found", 500))
+    }
+
+    // inserting the embeddings to pinecone
+    await PineconeStore.fromDocuments(
+        reducedDocs,
+        embeddings,
+        {
+            pineconeIndex,
+            namespace: candidateId
+        }
+    );
+}
+const queryToPc = async (namespace: string, question: string, next: NextFunction) => {
+
+    // get Required things
+    console.log(question);
+    const tokenUsage = { tokens: 0, totalTokenCount: 0 };
+    const pineconeIndex = getPineconeIndex(next);
+    const embeddings = getEmbeddings(next);
+    const llm = getChatLLM(next, tokenUsage);
+
+
+    if (!pineconeIndex || !embeddings || !llm) {
+        return next(new ErrorHandler("some of required term not found", 500))
+    }
+
+    // setUp Retriever
+    const vectorStore = await PineconeStore.fromExistingIndex(
+        embeddings,
+        {
+            pineconeIndex,
+            namespace,
+        }
+    );
+    const retriever = vectorStore.asRetriever();
+
+    // setUp prompt Templates
+    const standaloneQuestionTemplate = 'Given a question, convert it to a standalone question. question: {question} standalone question:'
+    const answerTemplate = `You are a helpful and enthusiastic career counselor who can answer a given question about candidate resume based on the context provided. Try to find the answer in the context. If you really don't know the answer, say "I'm sorry, I don't know the answer to that." Don't try to make up an answer. Always speak as if you were chatting to a candidate who is looking for a job.
+                            context: {context}
+                            question: {question}
+                            answer: `
+    // const answerTemplate = `You are a helpful and enthusiastic science teacher who can answer a given question about
+    // science based on the context provided. Try to find the answer in the context.
+    // If you really don't know the answer, say "I'm sorry, I don't know the answer to that."
+    // Don't try to make up an answer.
+    // Always speak as if you were chatting to a student who is curious about the science.
+    //                         context: {context}
+    //                         question: {question}
+    //                         answer: `
+    // setUp promptTemplate instance
+    const answerPrompt = PromptTemplate.fromTemplate(answerTemplate);
+    const standaloneQuestionPrompt = PromptTemplate.fromTemplate(standaloneQuestionTemplate)
+
+    // setUp the related chains
+    const standaloneQuestionChain = standaloneQuestionPrompt
+        .pipe(llm)
+        .pipe(new StringOutputParser());
+
+    const retrieverChain = RunnableSequence.from([
+        prevResult => prevResult.standalone_question,
+        retriever,
+        combineDocuments
+    ])
+    const answerChain = answerPrompt
+        .pipe(llm)
+        .pipe(new StringOutputParser())
+
+    // combine the related  chains to get output for a given input
+    const chain = RunnableSequence.from([
+        {
+            standalone_question: standaloneQuestionChain,
+            original_input: new RunnablePassthrough(),
+
+        },
+        {
+            context: retrieverChain,
+            question: ({ original_input }) => original_input.question
+        },
+        answerChain
+    ])
+
+    // invoking the combined chain to get response
+    const response = await chain.invoke({
+        question
+    });
+
+    return { tokenUsage, response }
+}
+const deleteFromPc = async (namespace: string, next: NextFunction) => {
+
+    const pineconeIndex = getPineconeIndex(next);
+    if (pineconeIndex) {
+        const ns = pineconeIndex.namespace(namespace);
+        const response = await ns.deleteAll();
+    }
+}
+
+
+export const getSuggestion = catchAsyncError(async (req, res, next) => {
+
+    const s3Key = req.query.s3Key as string;
+    const candidateId = req.query.candidateId as string;
+    const question = req.query.question as string
+    const resume = s3Key.split("/");
+    const fileName = resume[resume.length - 1];
+    const filePath = path.join(__dirname, "../..", 'uploads', fileName);
+
+    await downloadResumeToServer(s3Key, filePath);
+    await uploadToPinecone(candidateId, filePath, next);
+
+    const response = await queryToPc(candidateId, question, next);
+
+    // reset
+    await deleteFromPc(candidateId, next);
+    fs.unlink(filePath, (err: any) => {
+        if (err) throw err;
+        console.log('path/file.txt was deleted');
+    });
+
+
+    res.status(200).json({
+        success: true,
+        response
+    })
+
+
 })

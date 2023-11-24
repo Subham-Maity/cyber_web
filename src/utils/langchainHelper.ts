@@ -45,7 +45,7 @@ export const getEmbeddings = (next: NextFunction) => {
     return embeddings;
 }
 
-export const getChatLLM = (next: NextFunction) => {
+export const getChatLLM = (next: NextFunction, tokenUsage: { tokens: number, totalTokenCount: number }) => {
 
     const azureOpenAIApiKey = process.env.AZURE_OPENAI_KEY;
     const azureOpenAIApiVersion = process.env.AZURE_OPENAI_API_VERSION;
@@ -55,13 +55,29 @@ export const getChatLLM = (next: NextFunction) => {
     if (!azureOpenAIApiKey || !azureOpenAIApiVersion || !azureOpenAIApiInstanceName || !azureOpenAIApiDeploymentName) {
         return next(new ErrorHandler("All env variable not found while getting ChatLLM", 500));
     }
-
+    let totalTokenCount = 0;
     const llm = new ChatOpenAI({
         temperature: 0.5,
+        maxTokens: 200,
         azureOpenAIApiKey: azureOpenAIApiKey,
         azureOpenAIApiVersion: azureOpenAIApiVersion,
         azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
         azureOpenAIApiDeploymentName: azureOpenAIApiDeploymentName,
+        callbacks: [
+            {
+                handleLLMEnd: (val: any) => {
+                    try {
+                        const tokens = val.llmOutput.tokenUsage.completionTokens
+                        totalTokenCount += tokens;
+                        tokenUsage.tokens = tokens,
+                            tokenUsage.totalTokenCount = totalTokenCount
+                        console.log({ tokens, totalTokenCount });
+                    } catch {
+                        console.log(val.generations[0])
+                    }
+                },
+            },
+        ],
     })
 
     return llm;
