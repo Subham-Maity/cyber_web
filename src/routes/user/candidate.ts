@@ -6,7 +6,7 @@ import {
     logoutCandidate, signupCandidate,
     loginCandidate, updateCurrCandidate, updateEducation, updateExperience, populateCandidate, getDetails, getCurrCandidate, getSaveJob, removeSavedJob, saveCompany, getSavedCompany, removeSavedCompany, updateNotification, uploadResumeToS3, addResume, downloadResumeFromS3, getRecommendedJobs, deleteResumeFromS3, uploadProfileToS3, updateProfileAvatar
 } from '../../controller/userController/candidate'
-import { isAuthenticatedCandidate } from '../../middleware/auth';
+import { isAuthenticatedCandidate, isAuthenticatedEmployer } from '../../middleware/auth';
 
 const candidateRouter = express.Router();
 // auth 
@@ -34,7 +34,7 @@ candidateRouter.patch("/update/:id", updateCurrCandidate)
 candidateRouter.patch("/updateNoti/:id", updateNotification)
 candidateRouter.patch("/updateEdu/:id", updateEducation)
 candidateRouter.patch("/updateExp/:id", updateExperience)
-candidateRouter.get("/:id", getDetails);
+candidateRouter.get("/:id", isAuthenticatedEmployer, getDetails);
 
 
 export default candidateRouter;

@@ -1,8 +1,8 @@
 import catchAsyncError from "../middleware/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import JobApp from "../model/JobApp";
-import JobPost from "../model/JobPost";
 import Candidate from "../model/user/Candidate";
+import { ICandidate } from "../types/user";
 
 export const createJobApp = catchAsyncError(async (req, res, next) => {
 
@@ -10,16 +10,18 @@ export const createJobApp = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("body not found", 400));
     }
     const { candidate, jobPost } = req.body
-    console.log(req.body);
+
     if (!candidate || !jobPost) {
         return next(new ErrorHandler("candidate or jobPost is missing", 400));
     }
+    const user = req.user as ICandidate;
+    if (user && user.subscription.jobApplicationLimit === 0) {
+        return next(new ErrorHandler("You can't Apply more with you current plan Upgrade your plan to increase you daily limit maximum jobs you can apply", 400));
+    }
+
     const jobApp = await JobApp.create(req.body);
-    // const JobPost: any = await JobApp.findById({ _id: jobPost });
-    // if (JobPost) {
-    //     JobPost.candidates.push(candidate);
-    //     await jobPost.save();
-    // }
+    user.subscription.jobApplicationLimit--;
+    await user.save()
 
     res.status(200).json({
         jobApp,

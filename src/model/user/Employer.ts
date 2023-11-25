@@ -97,6 +97,21 @@ const employerSchema = new mongoose.Schema({
         type: String,
         enum: ["linkedIn", "jwt"]
     },
+    subscription: {
+        plan: {
+            type: String,
+            enum: ['starter', 'gold', 'diamond'],
+            default: 'starter',
+        },
+        requestLimit: {
+            type: Number,
+            default: 10,
+        },
+        viewProfileLimit: {
+            type: Number,
+            default: 10
+        }
+    },
     savedCandidates: [{ type: mongoose.Types.ObjectId, ref: 'Candidate' }]
 
 },

@@ -150,6 +150,25 @@ const candidateSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    profileViews: {
+        type: Number,
+        default: 0,
+    },
+    subscription: {
+        plan: {
+            type: String,
+            enum: ['starter', 'gold', 'diamond'],
+            default: 'starter',
+        },
+        jobApplicationLimit: {
+            type: Number,
+            default: 10,
+        },
+        feedbackLimit: {
+            type: Number,
+            default: 10
+        }
+    },
 },
     { timestamps: true }
 );

@@ -233,7 +233,18 @@ export const getDetails = catchAsyncError(async (req, res, next) => {
 
     const { id } = req.params;
 
+    const user = req.user as IEmployer;
+    if (user && user.subscription.viewProfileLimit === 0) {
+        return next(new ErrorHandler("Upgrade your Plan to view more profile", 400));
+    }
+
     const candidate = await Candidate.findById({ _id: id });
+    if (candidate) {
+        candidate.profileViews++;
+        await candidate.save();
+    }
+    user.subscription.viewProfileLimit--;
+    await user.save();
 
     res.status(200).json({
         success: true,

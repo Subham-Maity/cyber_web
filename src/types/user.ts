@@ -50,6 +50,16 @@ interface FSocial {
     facebook: string,
     website: string,
 }
+interface ISubscription {
+    plan: 'starter' | 'gold' | 'diamond';
+    jobApplicationLimit: number;
+    feedbackLimit: number;
+}
+interface ESubscription {
+    plan: 'starter' | 'gold' | 'diamond';
+    requestLimit: number;
+    viewProfileLimit: number;
+}
 
 export interface ICandidate extends Document {
     email: string;
@@ -80,9 +90,13 @@ export interface ICandidate extends Document {
     savedJobs: string[] | IJobPost[];
     savedCompanies: string[] | ICompany[];
     notifications: INotification[];
+    profileViews: number;
+    subscription: ISubscription
     createJWT(accessToken?: string): string;
     comparePassword(givenPassword: string): Promise<boolean>;
 }
+
+
 
 export interface IEmployer extends Document {
     email: string;
@@ -106,6 +120,7 @@ export interface IEmployer extends Document {
     jobs: string[],
     role: string,
     bio: string,
+    subscription: ESubscription,
     signInProvider?: "linkedIn" | "jwt"
     savedCandidates: string[],
     _id: string,
