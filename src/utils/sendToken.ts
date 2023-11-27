@@ -26,8 +26,7 @@ export const sendToken = (user: any, statusCode: number, res: Response, accessTo
   const options = {
     httpOnly: process.env.NODE_ENV === 'production',
     expires: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-    secure: process.env.NODE_ENV === 'production',
-    path: process.env.CLIENT_URL,
+    
   };
   res.status(statusCode).cookie("token", token, options).json({
     success: true,
