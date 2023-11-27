@@ -15,7 +15,6 @@ import controlledFieldRouter from './routes/controlledField.js';
 import errorMiddleware from './middleware/error.js';
 import adminRouter from './routes/user/adminRoute.js';
 import http from 'http';
-import { Server, Socket } from 'socket.io';
 import chatRouter from './routes/chat.js';
 import cookieParser from 'cookie-parser';
 dotenv.config()
@@ -23,11 +22,6 @@ dotenv.config()
 // initiating the app
 const app: Express = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL
-  }
-});
 
 // required middleware
 app.use(session({
@@ -43,6 +37,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
+console.log("client url is", process.env.CLIENT_URL)
 
 // routers
 app.use("/api/v1/company", companyRouter);
@@ -51,7 +46,7 @@ app.use("/api/v1/candidate", candidateRouter)
 app.use("/api/v1/employer", employerRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/jobApp", jobAppRouter);
-app.use("/api/v1/", controlledFieldRouter)
+app.use("/api/v1", controlledFieldRouter)
 app.use("/api/v1/chat", chatRouter)
 
 // app.use("/", (req, res, next) => {
