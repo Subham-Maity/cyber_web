@@ -43,6 +43,7 @@ export const isAuthenticatedCandidate = catchAsyncError(async (req, res, next) =
 
     next();
 })
+
 export const isAuthenticatedEmployer = catchAsyncError(async (req, res, next) => {
     const { token } = req.cookies;
     console.log(token);
