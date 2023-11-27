@@ -20,11 +20,10 @@ export const sendToken = (user: any, statusCode: number, res: Response, accessTo
   // console.log("accestoken", accessToken);
   // console.log("jwtToken", token);
 
-  const none: "none" = "none";
+
   // one day=24*60*60*1000
   const options = {
     httpOnly: process.env.NODE_ENV === 'production',
-    sameSite: none,
     expires: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
     // secure: process.env.NODE_ENV === 'production',
   };
