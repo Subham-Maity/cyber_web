@@ -25,6 +25,7 @@ export interface ICompany extends Document {
     jobPosts: string[];
     socialSites: string[];
     benefits: string[];
+    createdBy: string,
     isSaved?: boolean;
     jobOpenings?: number
 }

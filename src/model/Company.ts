@@ -1,26 +1,22 @@
 import mongoose, { Schema } from 'mongoose';
 import { ICompany } from '../types/company';
+
 const companySchema: Schema = new Schema({
     name: {
         type: String,
-        required: true,
+
     },
     email: {
         type: String,
-        required: true,
     },
     logo: {
         type: String,
-        required: true,
-        default: "none"
+        default: ""
     },
     contactNumber: {
         type: String,
     },
-    website: {
-        type: String,
-        required: true
-    },
+
     foundedDate: {
         type: Date,
     },
@@ -31,11 +27,7 @@ const companySchema: Schema = new Schema({
         {
             locality: String,
             city: String,
-            state: String,
             country: String,
-            zipcode: String,
-            maplocation: String,
-
         }
     ],
     funding: [
@@ -48,7 +40,7 @@ const companySchema: Schema = new Schema({
     ],
     teamSize: {
         type: String,
-        required: true,
+
     },
     category: {
         type: String
@@ -56,18 +48,37 @@ const companySchema: Schema = new Schema({
     about: {
         type: String,
     },
-    jobPosts: {
-        type: [String],
-        default: [],
-    },
+    jobPosts: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'JobPost',
+        },
+    ],
     socialSites: {
-        type: [String],
-        default: [],
+        linkedIn: {
+            type: String,
+            default: ""
+        },
+        twitter: {
+            type: String,
+            default: ""
+        },
+        website: {
+            type: String,
+            default: ""
+        },
+        facebook: {
+            type: String,
+            default: ""
+        },
     },
     benefits: {
         type: [String],
         default: [],
     },
+    createdBy: {
+        type: String,
+    }
 }, {
     timestamps: true
 }

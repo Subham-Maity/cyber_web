@@ -4,39 +4,57 @@ import Company from "../model/Company";
 import fs from 'fs'
 import Candidate from "../model/user/Candidate";
 import JobPost from "../model/JobPost";
+import { getUrlForUploadProfile } from "../utils/uploadToS3";
 
 export const addCompany = catchAsyncError(async (req, res, next) => {
 
     if (!req.body) {
         return next(new ErrorHandler("body not found", 400));
     }
-    console.log(req.body);
+    const { bodyObj, logoMetadata } = req.body;
+    const company = await Company.create(bodyObj);
+    if (!company) {
+        return next(new ErrorHandler("Something went wrong while creating company.", 500));
+    }
 
-    const company = await Company.create(req.body);
-
-
+    const { folder, extension, type } = logoMetadata;
+    const key = `${folder}/${company._id}.${extension}`
+    const url = getUrlForUploadProfile(key, type);
 
     res.status(201).json({
         company,
+        url,
         success: true,
-        message: "Compony Added successfully",
-
+        message: "Compony created successfully",
     })
 })
-// export const getCompanies = catchAsyncError(async (req, res, next) => {
+
+export const updateLogo = catchAsyncError(async (req, res, next) => {
+
+    const { s3Key, companyId, } = req.body;
+    if (!s3Key || !companyId) {
+        return next(new ErrorHandler("all required data not found", 400));
+    }
+    const publicEndpoint = process.env.AWS_PUBLIC_ENDPOINT;
+    if (!publicEndpoint) {
+        return next(new ErrorHandler("AWS_PUBLIC_ENDPOINT is not found", 404));
+    }
+
+    const logo = `${publicEndpoint}/${s3Key}`
+    console.log(logo);
+
+    const candidate = await Company.findByIdAndUpdate(companyId, { logo });
+    if (!candidate) {
+        return next(new ErrorHandler("candidate is not found", 404));
+    }
 
 
-//     const companies = await Company.find();
+    res.status(200).json({
+        success: true,
+        logo: logo,
+    });
+})
 
-
-
-//     res.status(201).json({
-//         companies,
-//         success: true,
-//         message: "Compony Added successfully",
-
-//     })
-// })
 
 export const populateJobPost = catchAsyncError(async (req, res, next) => {
     const location = 'mockData/Company.json'
