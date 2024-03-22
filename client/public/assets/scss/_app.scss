@@ -1,0 +1,33 @@
+
+
+$text-color: #000;
+$text-dark: #000;
+$heading: #254035;
+$light-bg: #EFF6F3;
+$color-one: #244034;
+$color-two: #D2F34C;
+$color-three: #00BF58;
+$color-four: #005025;
+$color-five: #31795A;
+
+:root {
+    --text-color: #{$text-color};
+    --text-dark: #{$text-dark};
+    --heading:#{$heading};
+    --light-bg:#{$light-bg};
+    --color-one: #{$color-one};
+    --color-two: #{$color-two};
+    --color-three: #{$color-three};
+    --color-four: #{$color-four};
+    --color-five: #{$color-five};    
+    
+  }
+
+
+
+// $light-bg: #EFF6F3;
+// $color-one: #244034;
+// $color-two: #D2F34C;
+// $color-three: #00BF58;
+// $color-four: #005025;
+// $color-five: #31795A;

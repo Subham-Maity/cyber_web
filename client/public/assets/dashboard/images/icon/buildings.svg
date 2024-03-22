@@ -1,0 +1,11 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 20 20">
+  <!-- Circle -->
+  <circle cx="10" cy="10" r="8.5" stroke="white" stroke-width="1.5" />
+
+  <!-- Horizontal Line -->
+  <line x1="2" y1="10" x2="18" y2="10" stroke="white" stroke-width="1.5" />
+
+  <!-- Vertical Line -->
+  <line x1="10" y1="2" x2="10" y2="18" stroke="white" stroke-width="1.5" />
+</svg>
